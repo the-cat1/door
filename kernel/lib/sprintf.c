@@ -3,7 +3,6 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <limits.h>
 
 #include "lib/ctype.h"
 #include "lib/sprintf.h"
@@ -86,85 +85,66 @@ static int parse_str_to_int(const char **str, int *value)
 /**
  * 读取不同大小的有符号整数
  *
- * @param length 长度修饰符
- * @param is_negative 输出参数，指示读取的整数是否为负数
- * @param args 可变参数列表
+ * @param fmt_args fmt 参数列表
  * @return 返回读取的整数值
  */
-static uintmax_t get_va_arg_int(enum LengthModifier length, bool *is_negative, va_list *args)
+static intmax_t get_va_arg_int(struct convert_args *fmt_args)
 {
-    intmax_t value;
-    switch (length)
+    switch (fmt_args->length)
     {
     case LENGTH_HH: // 对于 char 和 short，实际 va_list 里是 int 类型
     case LENGTH_H:
     case LENGTH_NONE:
-        value = va_arg(*args, int);
-        break;
+        return va_arg(*fmt_args->args, int);
 
     case LENGTH_L:
-        value = va_arg(*args, long);
-        break;
+        return va_arg(*fmt_args->args, long);
 
     case LENGTH_LL:
-        value = va_arg(*args, long long);
-        break;
+        return va_arg(*fmt_args->args, long long);
 
     case LENGTH_J:
-        value = va_arg(*args, intmax_t);
-        break;
+        return va_arg(*fmt_args->args, intmax_t);
 
     case LENGTH_Z: // 一般来说 size_t 和 ptrdiff_t 大小相等
     case LENGTH_T:
-        value = va_arg(*args, ptrdiff_t);
-        break;
+        return va_arg(*fmt_args->args, ptrdiff_t);
 
     default:
         return 0;
     }
-
-    // 判断正负
-    if (value < 0)
-    {
-        *is_negative = true;
-        return -value;
-    }
-    else
-    {
-        *is_negative = false;
-        return value;
-    }
 }
 
-/** 读取不同大小的无符号整数
+/**
+ * 读取不同大小的无符号整数
  *
  * @param length 长度修饰符
  * @param args 可变参数列表
  * @return 返回读取的无符号整数值
  */
-static uintmax_t get_va_arg_uint(enum LengthModifier length, va_list *args)
+static uintmax_t get_va_arg_uint(struct convert_args *fmt_args)
 {
-    switch (length)
+    switch (fmt_args->length)
     {
     case LENGTH_NONE:
     case LENGTH_HH:
     case LENGTH_H:
-        return va_arg(*args, unsigned int);
+        return va_arg(*fmt_args->args, unsigned int);
 
     case LENGTH_L:
-        return va_arg(*args, unsigned long);
+        return va_arg(*fmt_args->args, unsigned long);
 
     case LENGTH_LL:
-        return va_arg(*args, unsigned long long);
+        return va_arg(*fmt_args->args, unsigned long long);
 
     case LENGTH_J:
-        return va_arg(*args, uintmax_t);
+        return va_arg(*fmt_args->args, uintmax_t);
 
     case LENGTH_Z:
-        return va_arg(*args, size_t);
+        return va_arg(*fmt_args->args, size_t);
 
     case LENGTH_T:
-        return va_arg(*args, ptrdiff_t);
+        return va_arg(*fmt_args->args, ptrdiff_t);
 
     default:
         return 0;
@@ -182,7 +162,7 @@ static uintmax_t get_va_arg_uint(enum LengthModifier length, va_list *args)
  * @param base 进制，支持 8、10、16
  * @return 返回转换后的字符串长度
  */
-static size_t uintmax_to_str(struct convert_args *args, uintmax_t value, bool is_upper, int base)
+static size_t uintmax_to_str(struct convert_args *fmt_args, uintmax_t value, bool is_upper, int base)
 {
     static const char digits_lower[] = "0123456789abcdef";
     static const char digits_upper[] = "0123456789ABCDEF";
@@ -193,25 +173,25 @@ static size_t uintmax_to_str(struct convert_args *args, uintmax_t value, bool is
     size_t i = 0;
     while (value > 0)
     {
-        args->buffer[i] = (is_upper ? digits_upper : digits_lower)[value % base];
+        fmt_args->buffer[i] = (is_upper ? digits_upper : digits_lower)[value % base];
         value /= base;
         i++;
-        if (i >= args->buf_size - 1) // buffer 太小
+        if (i >= fmt_args->buf_size - 1) // buffer 太小
         {
-            args->buffer[args->buf_size - 1] = 0;
-            return args->buf_size - 1;
+            fmt_args->buffer[fmt_args->buf_size - 1] = 0;
+            return fmt_args->buf_size - 1;
         }
     }
 
     // 如果数字长度小于精度，前面补 0
-    for (int count = args->precision - i; count > 0; count--)
+    for (int count = fmt_args->precision - i; count > 0; count--)
     {
-        args->buffer[i] = '0';
+        fmt_args->buffer[i] = '0';
         i++;
-        if (i >= args->buf_size - 1) // buffer 太小
+        if (i >= fmt_args->buf_size - 1) // buffer 太小
         {
-            args->buffer[args->buf_size - 1] = 0;
-            return args->buf_size - 1;
+            fmt_args->buffer[fmt_args->buf_size - 1] = 0;
+            return fmt_args->buf_size - 1;
         }
     }
 
@@ -219,28 +199,39 @@ static size_t uintmax_to_str(struct convert_args *args, uintmax_t value, bool is
 }
 
 /**
- * convert_int - 将有符号整数转换为字符串
- * @param buffer 输出缓冲区
- * @param size 缓冲区大小
- * @param precision 精度，表示最小位数
- * @param flag 标志位
- * @param length 长度修饰符
+ * 将有符号整数转换为字符串
+ *
+ * @param fmt_args 格式化参数
  * @param is_upper 是否使用大写字母表示十六进制数
  * @param is_unsigned 是否为无符号整数
  * @param base 进制，支持 8~16
- * @param args 可变参数列表
  * @return 返回转换后的字符串长度
  */
-static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_unsigned, int base, va_list *args)
+static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_unsigned, int base)
 {
     if (fmt_args->buf_size < 1)
         return -1;
 
+    uintmax_t uvalue;
     bool is_negative = false;
-    intmax_t value = is_unsigned ? get_va_arg_uint(fmt_args->length, args) : get_va_arg_int(fmt_args->length, &is_negative, args);
+
+    /* 根据有没有符号获取参数 */
+    if (is_unsigned)
+    {
+        uvalue = get_va_arg_uint(fmt_args);
+    }
+    else
+    {
+        intmax_t value = get_va_arg_int(fmt_args);
+        is_negative = value < 0;
+        if (is_negative)
+            uvalue = (uintmax_t)-value;
+        else
+            uvalue = (uintmax_t)value;
+    }
 
     // 精度为 0，值为 0，输出空
-    if (fmt_args->precision == 0 && value == 0)
+    if (fmt_args->precision == 0 && uvalue == 0)
     {
         fmt_args->buffer[0] = 0;
         return 0;
@@ -249,7 +240,7 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
     if (fmt_args->precision < 0)
         fmt_args->precision = 1; // 默认精度为 1
 
-    size_t i = uintmax_to_str(fmt_args, value, is_upper, base);
+    size_t i = uintmax_to_str(fmt_args, (uintmax_t)uvalue, is_upper, base);
 
     /* 添加符号 */
     if (!is_unsigned)
@@ -281,6 +272,49 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
     fmt_args->buffer[result_len] = 0; // 末尾补 0
 
     return result_len;
+}
+
+static void write_n(struct convert_args *fmt_args, ptrdiff_t value)
+{
+    void *ptr = va_arg(*fmt_args->args, void *);
+
+    switch (fmt_args->length)
+    {
+    case LENGTH_NONE:
+        *(int *)ptr = value;
+        break;
+
+    case LENGTH_HH:
+        *(signed char *)ptr = value;
+        break;
+
+    case LENGTH_H:
+        *(short *)ptr = value;
+        break;
+
+    case LENGTH_L:
+        *(long *)ptr = value;
+        break;
+
+    case LENGTH_LL:
+        *(long long *)ptr = value;
+        break;
+
+    case LENGTH_J:
+        *(intmax_t *)ptr = value;
+        break;
+
+    case LENGTH_Z:
+        *(size_t *)ptr = (size_t)value;
+        break;
+
+    case LENGTH_T:
+        *(ptrdiff_t *)ptr = value;
+        break;
+
+    default:
+        break;
+    }
 }
 
 /**
@@ -315,7 +349,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
         fmt++; // 跳过 %
 
         // % format 格式: %[标志][宽度][.精度][长度]类型
-        struct convert_args fmt_args;
+        struct convert_args fmt_args = {0};
 
         // 读取 flag
         fmt_args.flag = 0;
@@ -371,7 +405,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
             }
             else if (isdigit(*fmt) && parse_str_to_int(&fmt, &fmt_args.precision))
             {
-                write_wrong_format(&ptr, end);
+                write_wrong_format(&ptr, end); // parse 失败
                 continue;
             }
 
@@ -383,7 +417,6 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
         }
 
         // 读取长度
-        fmt_args.length = LENGTH_NONE;
         switch (*fmt)
         {
         case 'h':
@@ -398,6 +431,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
                 fmt_args.length = LENGTH_H;
             }
             break;
+
         case 'l':
             fmt++;
             if (*fmt == 'l')
@@ -410,22 +444,27 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
                 fmt_args.length = LENGTH_L;
             }
             break;
+
         case 'j':
             fmt_args.length = LENGTH_J;
             fmt++;
             break;
+
         case 'z':
             fmt_args.length = LENGTH_Z;
             fmt++;
             break;
+
         case 't':
             fmt_args.length = LENGTH_T;
             fmt++;
             break;
+
         case 'L':
             fmt_args.length = LENGTH_L_CAPITAL;
             fmt++;
             break;
+
         default:
             fmt_args.length = LENGTH_NONE;
             break;
@@ -436,44 +475,56 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
         char buffer[4096];
         fmt_args.buffer = buffer;
         fmt_args.buf_size = sizeof(buffer);
+        fmt_args.args = &args;
 
         switch (*fmt)
         {
         case 'd':
         case 'i':
-            converted_len = convert_int(&fmt_args, false, false, 10, &args);
+            converted_len = convert_int(&fmt_args, false, false, 10);
             break;
 
         case 'o':
-            converted_len = convert_int(&fmt_args, false, true, 8, &args);
+            converted_len = convert_int(&fmt_args, false, true, 8);
             break;
 
         case 'u':
-            converted_len = convert_int(&fmt_args, false, true, 10, &args);
+            converted_len = convert_int(&fmt_args, false, true, 10);
             break;
 
         case 'x':
-            converted_len = convert_int(&fmt_args, false, true, 16, &args);
+            converted_len = convert_int(&fmt_args, false, true, 16);
             break;
 
         case 'X':
-            converted_len = convert_int(&fmt_args, true, true, 16, &args);
+            converted_len = convert_int(&fmt_args, true, true, 16);
             break;
 
-        case '%':
-            fmt_args.buffer[0] = '%';
-            fmt_args.buffer[1] = 0;
+        case 'c':
+            buffer[0] = get_va_arg_int(&fmt_args);
+            buffer[1] = 0;
             converted_len = 1;
             break;
 
+        case 'n': // 将已写入的字符数存储到参数中
+            write_n(&fmt_args, ptr - buf);
+            fmt++; // 用于跳过错误的格式字符 否则会多一个字
+            continue;
+
+        case '%':
+            *(ptr++) = '%';
+            fmt++;    // 同上, 跳过格式字符
+            continue; // 此时会检查 ptr < end
+
         default:
             write_wrong_format(&ptr, end);
+            fmt++;
             continue;
         }
 
         fmt++; // 跳过类型字符
 
-            char pad_char = (fmt_args.flag & FLAG_ZERO) ? '0' : ' ';
+        char pad_char = (fmt_args.flag & FLAG_ZERO) ? '0' : ' ';
         if (fmt_args.flag & FLAG_LEFT)
         {
             // 左对齐，在数字后面补填充
