@@ -1,0 +1,54 @@
+# tools/bochs/bochsrc.txt
+# bochs 的配置
+
+plugin_ctrl: unmapped=1, biosdev=1, speaker=1, extfpuirq=1, parallel=1, serial=1, iodebug=1
+config_interface: textconfig
+
+cpu: model=core2_penryn_t9600, count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
+cpu: cpuid_limit_winnt=0
+# romimage: file=$BXSHARE/BIOS-bochs-latest 
+# vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+vga: extension=vbe, update_freq=5
+keyboard: type=mf, serial_delay=250, paste_delay=100000, user_shortcut=none
+mouse: type=ps2, enabled=0, toggle=ctrl+mbutton
+pci: enabled=1, chipset=i440fx
+clock: sync=none, time0=utc, rtc_sync=0
+# clock: sync=realtime, time0=utc
+private_colormap: enabled=0
+
+# 软盘启动的配置，a.img为软盘名
+floppya: type=1_44, 1_44=floppy.img, status=inserted, write_protected=0
+
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata1: enabled=0, ioaddr1=0x170, ioaddr2=0x370, irq=15
+ata2: enabled=0, ioaddr1=0x1e8, ioaddr2=0x3e0, irq=11
+ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
+
+#ata0-master: type=disk, mode=flat, path=a.img, cylinders=130, heads=16, spt=63
+#ata0-slave: type=none
+#ata0-master: type=none
+#ata1-slave: type=none
+
+# 软盘启动/硬盘启动
+boot: floppy
+# boot: disk
+
+floppy_bootsig_check: disabled=1
+log: -
+logprefix: %t%e%d
+panic: action=ask
+error: action=report
+info: action=report
+debug: action=ignore
+debugger_log: -
+com1: enabled=1, mode=null
+com2: enabled=0
+com3: enabled=0
+com4: enabled=0
+parport1: enabled=1, file=none
+parport2: enabled=0
+speaker: enabled=1, mode=system
+magic_break: enabled=0
+print_timestamps: enabled=0
+port_e9_hack: enabled=0
+megs: 256

@@ -1,0 +1,20 @@
+# Door
+# .gitignore
+
+# 忽略的文件 / 文件夹
+
+# IDE / EDITOR
+.vscode
+*.code-workspace
+
+# Mid-files
+*.o
+*.bin
+*.lst
+*.elf
+
+# Kernel elf file
+kernel/kernel
+
+# Img file
+*.img
