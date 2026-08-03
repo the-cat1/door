@@ -274,6 +274,14 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
     return result_len;
 }
 
+static void pad(struct convert_args *fmt_args, char **ptr, char *end, int converted_len)
+{
+    int pad_size = fmt_args->width - converted_len;
+    char pad_char = fmt_args->flag & FLAG_ZERO ? '0' : ' ';
+    for (int i = 0; i < pad_size && *ptr < end; i++)
+        *(*ptr)++ = pad_char;
+}
+
 static void write_n(struct convert_args *fmt_args, ptrdiff_t value)
 {
     void *ptr = va_arg(*fmt_args->args, void *);
@@ -524,29 +532,17 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
         fmt++; // 跳过类型字符
 
-        char pad_char = (fmt_args.flag & FLAG_ZERO) ? '0' : ' ';
-        if (fmt_args.flag & FLAG_LEFT)
-        {
-            // 左对齐，在数字后面补填充
-            for (; converted_len < fmt_args.width && converted_len < (int)sizeof(buffer); converted_len++)
-            {
-                fmt_args.buffer[converted_len] = pad_char;
-            }
-        }
-        else
-        {
-            // 右对齐，在数字前面补填充
-            for (int i = 0; i < fmt_args.width - converted_len && ptr < end; i++, ptr++)
-            {
-                *ptr = pad_char;
-            }
-        }
+        if (!(fmt_args.flag & FLAG_LEFT))
+            pad(&fmt_args, &ptr, end, converted_len);
 
         // 复制缓冲区结果到 ptr
         for (int i = 0; i < converted_len && ptr < end; i++, ptr++)
         {
             *ptr = fmt_args.buffer[i];
         }
+
+        if (fmt_args.flag & FLAG_LEFT)
+            pad(&fmt_args, &ptr, end, converted_len);
     }
 
     *ptr = 0; // 结尾补 0
