@@ -6,12 +6,12 @@
 #include <stdint.h>
 #include <stddef.h>
 
-static inline char cabs(char i)
+static inline char hhabs(char i)
 {
     return i > 0 ? i : -i;
 }
 
-static inline short sabs(short i)
+static inline short habs(short i)
 {
     return i > 0 ? i : -i;
 }
@@ -31,12 +31,12 @@ static inline long long llabs(long long i)
     return i > 0 ? i : -i;
 }
 
-static inline intmax_t imaxabs(intmax_t i)
+static inline intmax_t jabs(intmax_t i)
 {
     return i > 0 ? i : -i;
 }
 
-static inline ptrdiff_t pdabs(ptrdiff_t i)
+static inline ptrdiff_t pabs(ptrdiff_t i)
 {
     return i > 0 ? i : -i;
 }
