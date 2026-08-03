@@ -3,10 +3,12 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include "lib/ctype.h"
-#include "lib/sprintf.h"
+#include "lib/string.h"
 #include "lib/math.h"
+#include "lib/sprintf.h"
 
 #define FLAG_LEFT 0x0001
 #define FLAG_SPACE 0x0002
@@ -29,8 +31,8 @@ enum LengthModifier
 
 struct convert_args
 {
-    char *buffer;
-    size_t buf_size;
+    char **ptr;
+    char *end;
     enum LengthModifier length;
     int width;
     int precision;
@@ -57,14 +59,19 @@ static int parse_str_to_int(const char **str, int *value)
     char buf[12]; // 最大 2,147,483,647，10 个字符
     int i = 0;
     int base = 1;
+    bool is_negative = false;
+
+    if (**str == '-')
+    {
+        (*str)++;
+        is_negative = true;
+    }
 
     while (isdigit(**str))
     {
         buf[i] = **str;
         if (i++ >= 12)
-        {
             return -1; // 数字太长
-        }
         (*str)++;
     }
 
@@ -79,6 +86,10 @@ static int parse_str_to_int(const char **str, int *value)
         base *= 10;
         i--;
     }
+
+    if (is_negative)
+        *value = -*value;
+
     return 0;
 }
 
@@ -152,7 +163,7 @@ static uintmax_t get_va_arg_uint(struct convert_args *fmt_args)
 }
 
 /**
- * 将无符号整数转换为字符串
+ * 将无符号整数转换为字符串 反转形式
  *
  * @param buffer 输出缓冲区
  * @param size 缓冲区大小
@@ -170,36 +181,29 @@ static size_t uintmax_to_str(struct convert_args *fmt_args, uintmax_t value, boo
     if (base < 8 || base > 16)
         return 0;
 
-    size_t i = 0;
-    while (value > 0)
+    char *p = *fmt_args->ptr;
+    while (value > 0 && p < fmt_args->end)
     {
-        fmt_args->buffer[i] = (is_upper ? digits_upper : digits_lower)[value % base];
+        *p = (is_upper ? digits_upper : digits_lower)[value % base];
         value /= base;
-        i++;
-        if (i >= fmt_args->buf_size - 1) // buffer 太小
-        {
-            fmt_args->buffer[fmt_args->buf_size - 1] = 0;
-            return fmt_args->buf_size - 1;
-        }
+        p++;
     }
 
     // 如果数字长度小于精度，前面补 0
-    for (int count = fmt_args->precision - i; count > 0; count--)
+    int pad_size = fmt_args->precision - (p - *fmt_args->ptr);
+    for (int i = 0; i < pad_size && p < fmt_args->end; i++)
     {
-        fmt_args->buffer[i] = '0';
-        i++;
-        if (i >= fmt_args->buf_size - 1) // buffer 太小
-        {
-            fmt_args->buffer[fmt_args->buf_size - 1] = 0;
-            return fmt_args->buf_size - 1;
-        }
+        *p = '0';
+        p++;
     }
 
-    return i;
+    *p = 0;
+
+    return p - *fmt_args->ptr;
 }
 
 /**
- * 将有符号整数转换为字符串
+ * @brief 将有符号整数转换为字符串
  *
  * @param fmt_args 格式化参数
  * @param is_upper 是否使用大写字母表示十六进制数
@@ -209,9 +213,6 @@ static size_t uintmax_to_str(struct convert_args *fmt_args, uintmax_t value, boo
  */
 static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_unsigned, int base)
 {
-    if (fmt_args->buf_size < 1)
-        return -1;
-
     uintmax_t uvalue;
     bool is_negative = false;
 
@@ -230,10 +231,12 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
             uvalue = (uintmax_t)value;
     }
 
+    char *ptr = *fmt_args->ptr;
+
     // 精度为 0，值为 0，输出空
     if (fmt_args->precision == 0 && uvalue == 0)
     {
-        fmt_args->buffer[0] = 0;
+        *ptr = 0;
         return 0;
     }
 
@@ -245,17 +248,19 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
     /* 添加符号 */
     if (!is_unsigned)
     {
-        if ((is_negative || fmt_args->flag & FLAG_PLUS || fmt_args->flag & FLAG_SPACE) && i >= fmt_args->buf_size - 2) // 留一个给符号
+        if ((is_negative || fmt_args->flag & FLAG_PLUS || fmt_args->flag & FLAG_SPACE) &&
+            i >= (size_t)(fmt_args->end - ptr - 1)) // 留一个给符号
         {
-            fmt_args->buffer[fmt_args->buf_size - 1] = 0;
-            return fmt_args->buf_size - 1;
+            ptr[i] = 0;
+            return i;
         }
+
         if (is_negative)
-            fmt_args->buffer[i++] = '-';
+            ptr[i++] = '-';
         else if (fmt_args->flag & FLAG_PLUS)
-            fmt_args->buffer[i++] = '+';
+            ptr[i++] = '+';
         else if (fmt_args->flag & FLAG_SPACE)
-            fmt_args->buffer[i++] = ' ';
+            ptr[i++] = ' ';
     }
 
     int result_len = i;
@@ -264,27 +269,180 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
     for (int j = 0; j < result_len / 2; j++)
     {
         char tmp;
-        tmp = fmt_args->buffer[result_len - j - 1];
-        fmt_args->buffer[result_len - j - 1] = fmt_args->buffer[j];
-        fmt_args->buffer[j] = tmp;
+        tmp = ptr[result_len - j - 1];
+        ptr[result_len - j - 1] = ptr[j];
+        ptr[j] = tmp;
     }
 
-    fmt_args->buffer[result_len] = 0; // 末尾补 0
+    ptr[result_len] = 0; // 末尾补 0
 
     return result_len;
 }
 
-static void pad(struct convert_args *fmt_args, char **ptr, char *end, int converted_len)
+static int convert_string(struct convert_args *fmt_args)
 {
-    int pad_size = fmt_args->width - converted_len;
-    char pad_char = fmt_args->flag & FLAG_ZERO ? '0' : ' ';
-    for (int i = 0; i < pad_size && *ptr < end; i++)
-        *(*ptr)++ = pad_char;
+    char *str = va_arg(*fmt_args->args, char *);
+
+    if (!str)
+        str = "[NULL]";
+
+    if (fmt_args->precision < 0)
+        fmt_args->precision = INT32_MAX;
+
+    size_t copy_len = MIN((size_t)MIN(fmt_args->end - *fmt_args->ptr, fmt_args->precision), strlen(str));
+    memcpy(*fmt_args->ptr, str, copy_len);
+
+    return copy_len;
+}
+
+// 往 ptr 写 pad_size 个填充符号
+static void pad(struct convert_args *fmt_args, int pad_size)
+{
+    // 仅没有 `-` 标志时才看 `0` 标志
+    char pad_char = fmt_args->flag & FLAG_ZERO && !(fmt_args->flag & FLAG_LEFT) ? '0' : ' ';
+    for (int i = 0; i < pad_size && *fmt_args->ptr < fmt_args->end; i++)
+        *(*fmt_args->ptr)++ = pad_char;
+}
+
+// 解析一个 % 格式化字符串，返回 0 正常，其他则为错误
+static int parse_fmt(struct convert_args *fmt_args, char **ptr, char *end, const char **fmt)
+{
+    // 读取 flag
+    fmt_args->flag = 0;
+    while (**fmt == '-' || **fmt == '+' || **fmt == ' ' || **fmt == '#' || **fmt == '0')
+    {
+        switch (**fmt)
+        {
+        case '-':
+            fmt_args->flag |= FLAG_LEFT;
+            break;
+        case '+':
+            fmt_args->flag |= FLAG_PLUS;
+            break;
+        case ' ':
+            fmt_args->flag |= FLAG_SPACE;
+            break;
+        case '#':
+            fmt_args->flag |= FLAG_HASH;
+            break;
+        case '0':
+            fmt_args->flag |= FLAG_ZERO;
+            break;
+        default:
+            // Impossible!!!
+            break;
+        }
+        (*fmt)++;
+    }
+
+    // 读取 width
+    fmt_args->width = 0;
+    if (**fmt == '*')
+    {
+        (*fmt)++;
+        fmt_args->width = va_arg(*fmt_args->args, int);
+    }
+    else if (isdigit(**fmt) && parse_str_to_int(fmt, &fmt_args->width))
+    {
+        write_wrong_format(ptr, end);
+        return -1;
+    }
+
+    if (fmt_args->width < 0)
+    {
+        fmt_args->width = -fmt_args->width;
+        fmt_args->flag |= FLAG_LEFT;
+    }
+
+    // 读取精度
+    fmt_args->precision = -1;
+    if (**fmt == '.')
+    {
+        (*fmt)++;
+
+        if (**fmt == '*')
+        {
+            fmt_args->precision = va_arg(*fmt_args->args, int);
+            (*fmt)++;
+        }
+        else if (isdigit(**fmt) || **fmt == '-')
+        {
+            if (parse_str_to_int(fmt, &fmt_args->precision))
+            {
+                write_wrong_format(ptr, end); // parse 失败
+                return -1;
+            }
+        }
+        else
+        {
+            // 如果 . 后面不跟数字，则精度为 0
+            fmt_args->precision = 0;
+        }
+    }
+
+    // 读取长度
+    switch (**fmt)
+    {
+    case 'h':
+        (*fmt)++;
+        if (**fmt == 'h')
+        {
+            fmt_args->length = LENGTH_HH;
+            (*fmt)++;
+        }
+        else
+        {
+            fmt_args->length = LENGTH_H;
+        }
+        break;
+
+    case 'l':
+        (*fmt)++;
+        if (**fmt == 'l')
+        {
+            fmt_args->length = LENGTH_LL;
+            (*fmt)++;
+        }
+        else
+        {
+            fmt_args->length = LENGTH_L;
+        }
+        break;
+
+    case 'j':
+        fmt_args->length = LENGTH_J;
+        (*fmt)++;
+        break;
+
+    case 'z':
+        fmt_args->length = LENGTH_Z;
+        (*fmt)++;
+        break;
+
+    case 't':
+        fmt_args->length = LENGTH_T;
+        (*fmt)++;
+        break;
+
+    case 'L':
+        fmt_args->length = LENGTH_L_CAPITAL;
+        (*fmt)++;
+        break;
+
+    default:
+        fmt_args->length = LENGTH_NONE;
+        break;
+    }
+
+    return 0;
 }
 
 static void write_n(struct convert_args *fmt_args, ptrdiff_t value)
 {
     void *ptr = va_arg(*fmt_args->args, void *);
+
+    if (!ptr)
+        return;
 
     switch (fmt_args->length)
     {
@@ -326,11 +484,13 @@ static void write_n(struct convert_args *fmt_args, ptrdiff_t value)
 }
 
 /**
- * vsnprintf - 格式化输出到字符串
- * @buf: 输出缓冲区
- * @size: 缓冲区大小，包括末尾的 '\0'
- * @fmt: 格式字符串
- * @args: 可变参数列表
+ * @brief 格式化输出到字符串
+ *
+ * @param buf 输出缓冲区
+ * @param size 缓冲区大小，包括末尾的 '\0'
+ * @param fmt 格式字符串
+ * @param args 可变参数列表
+ * @return 写入的字节数
  */
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 {
@@ -356,162 +516,49 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
         fmt++; // 跳过 %
 
-        // % format 格式: %[标志][宽度][.精度][长度]类型
-        struct convert_args fmt_args = {0};
+        int converted_len;
+        struct convert_args fmt_args = {
+            .args = &args,
+            .ptr = &ptr,
+            .end = end};
 
-        // 读取 flag
-        fmt_args.flag = 0;
-        while (*fmt == '-' || *fmt == '+' || *fmt == ' ' || *fmt == '#' || *fmt == '0')
-        {
-            switch (*fmt)
-            {
-            case '-':
-                fmt_args.flag |= FLAG_LEFT;
-                break;
-            case '+':
-                fmt_args.flag |= FLAG_PLUS;
-                break;
-            case ' ':
-                fmt_args.flag |= FLAG_SPACE;
-                break;
-            case '#':
-                fmt_args.flag |= FLAG_HASH;
-                break;
-            case '0':
-                fmt_args.flag |= FLAG_ZERO;
-                break;
-            default:
-                write_wrong_format(&ptr, end);
-                continue;
-            }
-            fmt++;
-        }
-
-        // 读取 width
-        fmt_args.width = 0;
-        if (*fmt == '*')
-        {
-            fmt_args.width = va_arg(args, int);
-            fmt++;
-        }
-        else if (isdigit(*fmt) && parse_str_to_int(&fmt, &fmt_args.width))
-        {
-            write_wrong_format(&ptr, end);
+        if (parse_fmt(&fmt_args, &ptr, end, &fmt))
             continue;
-        }
-
-        // 读取精度
-        fmt_args.precision = 0;
-        if (*fmt == '.')
-        {
-            fmt++;
-
-            if (*fmt == '*')
-            {
-                fmt_args.precision = va_arg(args, int);
-                fmt++;
-            }
-            else if (isdigit(*fmt) && parse_str_to_int(&fmt, &fmt_args.precision))
-            {
-                write_wrong_format(&ptr, end); // parse 失败
-                continue;
-            }
-
-            // 如果 . 后面不跟数字，则精度为 0
-        }
-        else
-        {
-            fmt_args.precision = -1; // 使用默认精度
-        }
-
-        // 读取长度
-        switch (*fmt)
-        {
-        case 'h':
-            fmt++;
-            if (*fmt == 'h')
-            {
-                fmt_args.length = LENGTH_HH;
-                fmt++;
-            }
-            else
-            {
-                fmt_args.length = LENGTH_H;
-            }
-            break;
-
-        case 'l':
-            fmt++;
-            if (*fmt == 'l')
-            {
-                fmt_args.length = LENGTH_LL;
-                fmt++;
-            }
-            else
-            {
-                fmt_args.length = LENGTH_L;
-            }
-            break;
-
-        case 'j':
-            fmt_args.length = LENGTH_J;
-            fmt++;
-            break;
-
-        case 'z':
-            fmt_args.length = LENGTH_Z;
-            fmt++;
-            break;
-
-        case 't':
-            fmt_args.length = LENGTH_T;
-            fmt++;
-            break;
-
-        case 'L':
-            fmt_args.length = LENGTH_L_CAPITAL;
-            fmt++;
-            break;
-
-        default:
-            fmt_args.length = LENGTH_NONE;
-            break;
-        }
 
         // 处理类型
-        int converted_len;
-        char buffer[4096];
-        fmt_args.buffer = buffer;
-        fmt_args.buf_size = sizeof(buffer);
-        fmt_args.args = &args;
-
         switch (*fmt)
         {
-        case 'd':
+        case 'd': // 十进制有符号整数
         case 'i':
             converted_len = convert_int(&fmt_args, false, false, 10);
             break;
 
-        case 'o':
+        case 'o': // 八进制无符号整数
             converted_len = convert_int(&fmt_args, false, true, 8);
             break;
 
-        case 'u':
+        case 'u': // 十进制无符号整数
             converted_len = convert_int(&fmt_args, false, true, 10);
             break;
 
-        case 'x':
+        case 'x': // 十六进制无符号整数 小写
             converted_len = convert_int(&fmt_args, false, true, 16);
             break;
 
-        case 'X':
+        case 'X': // 十六进制无符号整数 大写
             converted_len = convert_int(&fmt_args, true, true, 16);
             break;
 
+        case 's':
+            converted_len = convert_string(&fmt_args);
+            break;
+
         case 'c':
-            buffer[0] = get_va_arg_int(&fmt_args);
-            buffer[1] = 0;
+            ptr[0] = get_va_arg_int(&fmt_args); // 简单地使用 int 的长度描述符，实际上只有 `l` -> wint_t
             converted_len = 1;
+            break;
+
+        case 'p':
             break;
 
         case 'n': // 将已写入的字符数存储到参数中
@@ -532,17 +579,21 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
         fmt++; // 跳过类型字符
 
-        if (!(fmt_args.flag & FLAG_LEFT))
-            pad(&fmt_args, &ptr, end, converted_len);
-
-        // 复制缓冲区结果到 ptr
-        for (int i = 0; i < converted_len && ptr < end; i++, ptr++)
-        {
-            *ptr = fmt_args.buffer[i];
-        }
+        converted_len = MIN(converted_len, end - ptr);
+        fmt_args.width = MIN(fmt_args.width, end - ptr);
+        int pad_size = MAX(fmt_args.width - converted_len, 0);
 
         if (fmt_args.flag & FLAG_LEFT)
-            pad(&fmt_args, &ptr, end, converted_len);
+        {
+            ptr += converted_len;
+            pad(&fmt_args, pad_size);
+        }
+        else
+        {
+            memmove(ptr + pad_size, ptr, converted_len);
+            pad(&fmt_args, pad_size);
+            ptr += converted_len;
+        }
     }
 
     *ptr = 0; // 结尾补 0

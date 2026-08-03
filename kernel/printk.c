@@ -21,6 +21,22 @@ static void set_char_attribute(int row, int col, uint16_t char_attribute)
     *(VIDEO_MEMORY + (row * COLS + col) * 2 + 1) = (char)(char_attribute & 0xFF);
 }
 
+static void scroll_screen()
+{
+    // 向上移动 0 ~ (ROWS - 1) 行
+    for (int row = 0; row < ROWS - 1; row++)
+    {
+        for (int col = 0; col < COLS; col++)
+        {
+            set_char_attribute(row, col, get_char_attribute(row + 1, col));
+        }
+    }
+
+    // 清空最后一行
+    for (int col = 0; col < COLS; col++)
+        set_char_attribute(ROWS - 1, col, 0);
+}
+
 static void write_char(char c, char attribute)
 {
     if (c == '\r')
@@ -49,24 +65,6 @@ static void write_char(char c, char attribute)
     {
         scroll_screen();
         cursor_row = ROWS - 1;
-    }
-}
-
-static void scroll_screen()
-{
-    // 向上移动 0 ~ (ROWS - 1) 行
-    for (int row = 0; row < ROWS - 1; row++)
-    {
-        for (int col = 0; col < COLS; col++)
-        {
-            set_char_attribute(row, col, get_char_attribute(row + 1, col));
-        }
-    }
-
-    // 清空最后一行
-    for (int col = 0; col < COLS; col++)
-    {
-        set_char_attribute(ROWS - 1, col, 0);
     }
 }
 
