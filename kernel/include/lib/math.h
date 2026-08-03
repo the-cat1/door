@@ -6,39 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-static inline char hhabs(char i)
-{
-    return i > 0 ? i : -i;
-}
-
-static inline short habs(short i)
-{
-    return i > 0 ? i : -i;
-}
-
-static inline int abs(int i)
-{
-    return i > 0 ? i : -i;
-}
-
-static inline long labs(long i)
-{
-    return i > 0 ? i : -i;
-}
-
-static inline long long llabs(long long i)
-{
-    return i > 0 ? i : -i;
-}
-
-static inline intmax_t jabs(intmax_t i)
-{
-    return i > 0 ? i : -i;
-}
-
-static inline ptrdiff_t pabs(ptrdiff_t i)
-{
-    return i > 0 ? i : -i;
-}
+#define ABS(a) ((a) > 0 ? (a) : -(a))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 #endif
