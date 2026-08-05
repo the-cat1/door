@@ -6,12 +6,7 @@
 
 void kmain(void)
 {
-    printk("%10s\n", NULL);
-    printk("%10s\n", "hello");
-    printk("%10s\n", "world");
-    printk("%10s\n", "kernel!");
-    printk("%0+10d\n", 25); // something wrong
-    printk("%0 10d\n", 25);
+    printk("%#-5X%#5o", 31, 23);
 
     while (1)
         ;

@@ -163,12 +163,10 @@ static uintmax_t get_va_arg_uint(struct convert_args *fmt_args)
 }
 
 /**
- * 将无符号整数转换为字符串 反转形式
+ * 将无符号整数转换为字符串（反转形式）
  *
- * @param buffer 输出缓冲区
- * @param size 缓冲区大小
+ * @param fmt_args 格式化参数
  * @param value 要转换的无符号整数值
- * @param precision 精度，表示最小位数
  * @param is_upper 是否使用大写字母表示十六进制数
  * @param base 进制，支持 8、10、16
  * @return 返回转换后的字符串长度
@@ -181,25 +179,34 @@ static size_t uintmax_to_str(struct convert_args *fmt_args, uintmax_t value, boo
     if (base < 8 || base > 16)
         return 0;
 
+    bool is_zero = value == 0;
+
+    // 将 value 转换成反转的字符串
     char *p = *fmt_args->ptr;
-    while (value > 0 && p < fmt_args->end)
+    int i = 0;
+    while (value > 0 && p + i < fmt_args->end)
     {
-        *p = (is_upper ? digits_upper : digits_lower)[value % base];
+        p[i++] = (is_upper ? digits_upper : digits_lower)[value % base];
         value /= base;
-        p++;
     }
 
-    // 如果数字长度小于精度，前面补 0
-    int pad_size = fmt_args->precision - (p - *fmt_args->ptr);
-    for (int i = 0; i < pad_size && p < fmt_args->end; i++)
+    // 如果是 8 进制且有 HASH 标志，需要增加精度来添加 0 前缀
+    if (base == 8 && fmt_args->flag & FLAG_HASH)
+        fmt_args->precision = MAX(fmt_args->precision, i + 1);
+
+    // 如果数字长度小于精度，前面补 0 或 ‘ ’ (空格)
+    int pad_size = fmt_args->precision - i;
+    for (int j = 0; j < pad_size && p + i < fmt_args->end; j++)
+        p[i++] = '0';
+
+    // 如果是非零 16 进制并且有 HASH，需要添加 0x / 0X 前缀
+    if (!is_zero && base == 16 && fmt_args->flag & FLAG_HASH)
     {
-        *p = '0';
-        p++;
+        p[i++] = is_upper ? 'X' : 'x';
+        p[i++] = '0';
     }
 
-    *p = 0;
-
-    return p - *fmt_args->ptr;
+    return i;
 }
 
 /**
@@ -233,23 +240,22 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
 
     char *ptr = *fmt_args->ptr;
 
-    // 精度为 0，值为 0，输出空
-    if (fmt_args->precision == 0 && uvalue == 0)
-    {
-        *ptr = 0;
-        return 0;
-    }
+    bool have_sign = fmt_args->flag & (FLAG_SPACE | FLAG_PLUS) || is_negative;
 
     if (fmt_args->precision < 0)
-        fmt_args->precision = 1; // 默认精度为 1
+    {
+        if (fmt_args->flag & FLAG_ZERO) // 指定了 `0` 标志，且没有指定精度，需要填充 0 到宽度
+            fmt_args->precision = have_sign ? fmt_args->width - 1 : fmt_args->width;
+        else
+            fmt_args->precision = 1; // 默认精度为 1
+    }
 
     size_t i = uintmax_to_str(fmt_args, (uintmax_t)uvalue, is_upper, base);
 
     /* 添加符号 */
     if (!is_unsigned)
     {
-        if ((is_negative || fmt_args->flag & FLAG_PLUS || fmt_args->flag & FLAG_SPACE) &&
-            i >= (size_t)(fmt_args->end - ptr - 1)) // 留一个给符号
+        if (have_sign && i >= (size_t)(fmt_args->end - ptr - 1)) // 留一个给符号
         {
             ptr[i] = 0;
             return i;
@@ -274,8 +280,6 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
         ptr[j] = tmp;
     }
 
-    ptr[result_len] = 0; // 末尾补 0
-
     return result_len;
 }
 
@@ -298,10 +302,8 @@ static int convert_string(struct convert_args *fmt_args)
 // 往 ptr 写 pad_size 个填充符号
 static void pad(struct convert_args *fmt_args, int pad_size)
 {
-    // 仅没有 `-` 标志时才看 `0` 标志
-    char pad_char = fmt_args->flag & FLAG_ZERO && !(fmt_args->flag & FLAG_LEFT) ? '0' : ' ';
     for (int i = 0; i < pad_size && *fmt_args->ptr < fmt_args->end; i++)
-        *(*fmt_args->ptr)++ = pad_char;
+        *(*fmt_args->ptr)++ = ' ';
 }
 
 // 解析一个 % 格式化字符串，返回 0 正常，其他则为错误
