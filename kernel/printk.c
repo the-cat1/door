@@ -77,9 +77,9 @@ void printk(const char *format, ...)
     vsnprintf(buffer, sizeof(buffer), format, args);
 
     for (char *buffer_ptr = buffer; *buffer_ptr != '\0'; buffer_ptr++)
-    {
         write_char(*buffer_ptr, ATTRIBUTE);
-    }
+
+    write_char('\n', 0); // 换行
 
     va_end(args);
 }
