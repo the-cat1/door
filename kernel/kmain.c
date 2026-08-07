@@ -6,7 +6,10 @@
 
 void kmain(void)
 {
-    printk("%#-5X%#5o", 31, 23);
+    printk("%#5.1x\n", 0, 23);
+    printk("PTR %p\n", NULL);
+    printk("PTR %u\n", 0xB8000);
+    printk("PTR %p\n", 0xc0000000);
 
     while (1)
         ;

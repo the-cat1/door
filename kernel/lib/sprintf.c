@@ -179,8 +179,6 @@ static size_t uintmax_to_str(struct convert_args *fmt_args, uintmax_t value, boo
     if (base < 8 || base > 16)
         return 0;
 
-    bool is_zero = value == 0;
-
     // 将 value 转换成反转的字符串
     char *p = *fmt_args->ptr;
     int i = 0;
@@ -200,7 +198,7 @@ static size_t uintmax_to_str(struct convert_args *fmt_args, uintmax_t value, boo
         p[i++] = '0';
 
     // 如果是非零 16 进制并且有 HASH，需要添加 0x / 0X 前缀
-    if (!is_zero && base == 16 && fmt_args->flag & FLAG_HASH)
+    if (i != 0 && base == 16 && fmt_args->flag & FLAG_HASH)
     {
         p[i++] = is_upper ? 'X' : 'x';
         p[i++] = '0';
@@ -297,6 +295,15 @@ static int convert_string(struct convert_args *fmt_args)
     memcpy(*fmt_args->ptr, str, copy_len);
 
     return copy_len;
+}
+
+static int convert_pointer(struct convert_args *fmt_args)
+{
+    fmt_args->flag = FLAG_ZERO | FLAG_HASH;
+    fmt_args->width = 32 / 4;
+    fmt_args->length = LENGTH_Z;
+
+    return convert_int(fmt_args, false, true, 16);
 }
 
 // 往 ptr 写 pad_size 个填充符号
@@ -493,6 +500,8 @@ static void write_n(struct convert_args *fmt_args, ptrdiff_t value)
  * @param fmt 格式字符串
  * @param args 可变参数列表
  * @return 写入的字节数
+ *
+ * 支持 %i %d %u %o %x %X %c %s %p
  */
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 {
@@ -561,6 +570,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
             break;
 
         case 'p':
+            converted_len = convert_pointer(&fmt_args);
             break;
 
         case 'n': // 将已写入的字符数存储到参数中
