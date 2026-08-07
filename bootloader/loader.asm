@@ -70,6 +70,11 @@ ROOT_DIR_SIZE       equ 14          ; 根目录大小
 ROOT_ENTRY_COUNT    equ 224         ; 根目录 Entry 数量
 FAT_LBA_OFFSET      equ RSVDSECCNT + FAT_SIZE * FAT_COUNT + ROOT_DIR_SIZE - 2
 
+VGA_IO_INDEX        equ 0x03D4      ; VGA 显卡的索引寄存器
+VGA_IO_DATA         equ 0x03D5      ; VGA 显卡的数据寄存器
+VGA_IDX_POS_HIGH    equ 0x0E        ; 光标位置高八位
+VGA_IDX_POS_LOW     equ 0x0F        ; 光标位置低八位
+
 BOOT_DEVICE         equ 0x00FFFFFF  ; 启动设备，用于 multiboot
 
 
@@ -217,21 +222,38 @@ pm_start:
 
     sti
 
-    call clean_screen
+    call get_cursor_pos
+
     mov esi, hello_str
     call print_string
-    call print_mmap
 
-    call init_floppy
+    call config_mbinfo              ; 获取 Multiboot Info
     jc halt
 
-    call read_fat
+    call print_mmap                 ; 打印 mmap 信息
+    mov esi, mem_lower_str          ; 打印 mem 信息
+    call print_string
+    mov eax, [MB_INFO_ADDR + 4]
+    call print_u32_hex
+    call put_lf
+    mov esi, mem_upper_str
+    call print_string
+    mov eax, [MB_INFO_ADDR + 8]
+    call print_u32_hex
+    call put_lf
+
+    call put_lf
+
+    call init_floppy                ; 初始化软驱
     jc halt
 
-    call read_root_directory
+    call read_fat                   ; 读取 FAT 表
     jc halt
 
-    mov esi, loader_cfg_path_str
+    call read_root_directory        ; 读取根目录
+    jc halt
+
+    mov esi, loader_cfg_path_str    ; 加载 loader.cfg
     call find_file
     jc halt
 
@@ -240,10 +262,10 @@ pm_start:
     call load_file
     jc halt
 
-    call parse_cfg
+    call parse_cfg                  ; 解析
     jc halt
 
-    mov esi, found_boot_name_str
+    mov esi, found_boot_name_str    ; 打印信息
     call print_string
     mov esi, CFG_BOOT_NAME
     call print_string
@@ -279,9 +301,6 @@ pm_start:
     call print_string
 
     call load_kernel
-    jc halt
-
-    call config_mbinfo
     jc halt
 
     cli
@@ -1110,6 +1129,7 @@ put_char:
 .return:
     mov [cursor_col], eax
     mov [cursor_row], ecx
+    call set_cursor_pos
     popad
     ret
 .t_char:
@@ -1210,7 +1230,8 @@ print_u16_hex:
     popad
     ret
 
-
+; 打印 8 位无符号 16 进制数字
+; al: 要打印的数字
 print_u8_hex:
     pushad
     mov cl, al
@@ -1223,6 +1244,63 @@ print_u8_hex:
     and ebx, 0x0F
     mov al, [ebx + hex_upper_str]
     call put_char
+    popad
+    ret
+
+
+; 获取 VGA 显卡的光标位置，存储在 cursor_col 和 cursor_row
+get_cursor_pos:
+    pushad
+
+    mov dx, VGA_IO_INDEX            ; 读取高位
+    mov al, VGA_IDX_POS_HIGH
+    out dx, al
+    mov dx, VGA_IO_DATA
+    in al, dx
+    mov ah, al                      ; 高位在 ah
+
+    mov dx, VGA_IO_INDEX            ; 读取低位
+    mov al, VGA_IDX_POS_LOW
+    out dx, al
+    mov dx, VGA_IO_DATA
+    in al, dx                       ; 低位在 al
+
+    mov bl, VIDEO_COLS
+    div bl                          ; ax / bl，al 为 row，ah 为 col
+
+    movzx edx, al
+    mov [cursor_row], edx
+    movzx edx, ah
+    mov [cursor_col], edx
+
+    popad
+    ret
+
+
+; 设置光标位置到 cursor_row 和 cursor_col
+set_cursor_pos:
+    pushad
+
+    mov eax, [cursor_row]           ; 获取光标位置 0 ~ 1999
+    mov ecx, VIDEO_COLS
+    mul ecx
+    add eax, [cursor_col]
+    mov ecx, eax
+
+    mov dx, VGA_IO_INDEX            ; 写入低位
+    mov al, VGA_IDX_POS_LOW
+    out dx, al
+    mov dx, VGA_IO_DATA
+    mov al, cl
+    out dx, al
+
+    mov dx, VGA_IO_INDEX            ; 写入高位
+    mov al, VGA_IDX_POS_HIGH
+    out dx, al
+    mov dx, VGA_IO_DATA
+    mov al, ch
+    out dx, al
+
     popad
     ret
 
@@ -1450,7 +1528,7 @@ get_mem_info:
     sbb edx, 0
 
     shrd eax, edx, 10               ; 以 KB 为单位
-    mov [MB_INFO_ADDR + 8], eax
+    mov dword [MB_INFO_ADDR + 8], eax
     or dword [MB_INFO_ADDR], 0x01 + 0x40
 
     ; 写入 MMAP 信息
@@ -1832,7 +1910,7 @@ halt:
 err_E820_str        db 0dh, 0ah, 'Cannot detect memory infomation.', 0dh, 0ah
                     db 'Maybe the BIOS does not support <int 0x15, eax=0xE820>?', 0
 get_mem_info_str    db 'Faild to get memory info. (mem_lower, mem_upper)'
-hello_str           db 'Door Loader', 0ah, 'By Zhan zixuan, 2026', 0ah, 0ah, 0,
+hello_str           db 0ah, 0ah, 'Door Loader', 0ah, 'By Zhan zixuan, 2026', 0ah, 0ah, 0,
 hex_upper_str       db '0123456789ABCDEF', 0
 mmap_head_str       db 'No.  StartAddress---- EndAddress------ Length---------- Type---- Comment', 0ah, 0
 unknown_str         db 'Unknown', 0
@@ -1861,6 +1939,8 @@ null_handler_str    db 0ah, 'Null intrrupt handler was fired. CPU halt...', 0
 found_boot_name_str db 'Boot name: ', 0
 print_path_str      db 'Kernel path: ', 0
 print_cmdline_str   db 'Kernel cmdline: ', 0
+mem_lower_str       db 'Lower memory (in KiB): ', 0
+mem_upper_str       db 'Upper memory (in KiB): ', 0
 err_check_sum_str   db 'Wrong Multiboot checksum!', 0ah, 0
 invaild_kernel_str  db 'Invaild kernel image! (No Multiboot sign)', 0ah, 0
 ok_kernel_str       db 'Loading kernel...', 0
