@@ -503,7 +503,7 @@ find_entry_root:
 .cmp_loop:
     mov ebx, edi
     mov ecx, 11
-    rep cmpsb
+    repe cmpsb
     je .found
     mov esi, ebp
     add edi, 32 - 11
@@ -560,7 +560,7 @@ find_subdir:
     mov ebx, edi
 .next_entry:
     mov ecx, 11
-    rep cmpsb
+    repe cmpsb
     je .found
     add ebx, 32
     mov edi, ebx
