@@ -18,3 +18,11 @@ kernel/kernel
 
 # Img file
 *.img
+
+# Editor
+.*
+*~
+\#*\#
+
+# No ignore
+!.gitignore
