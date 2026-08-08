@@ -265,6 +265,8 @@ pm_start:
     call parse_cfg                  ; 解析
     jc halt
 
+    call get_filename               ; 从 cmdline 获取文件名
+
     mov esi, found_boot_name_str    ; 打印信息
     call print_string
     mov esi, CFG_BOOT_NAME
@@ -401,8 +403,13 @@ find_file:
     pop esi
     ret
 .err:
+    add esp, 16
+    pop ecx
+    pop ebx
+    pop edi
+    pop esi
     stc
-    jmp .return
+    ret
 
 
 ; 加载一个文件
@@ -1587,7 +1594,6 @@ cmp_str:
 ; 输入 EDX 文件大小
 parse_cfg:
     pushad
-    mov esi, CFG_FILE_ADDR
     xor eax, eax
     mov ecx, CFG_PARSE_BUF_SIZE + 1
     mov edi, CFG_PARSE_KEY_ADDR
@@ -1596,11 +1602,9 @@ parse_cfg:
     mov edi, CFG_BOOT_NAME
     rep stosb
     mov ecx, CFG_PARSE_BUF_SIZE + 1
-    mov edi, CFG_KERNEL_PATH
-    rep stosb
-    mov ecx, CFG_PARSE_BUF_SIZE + 1
     mov edi, CFG_KERNEL_CMDLINE
     rep stosb
+    mov esi, CFG_FILE_ADDR
 .read_line:
     mov al, [esi]
     cmp al, 0
@@ -1619,23 +1623,26 @@ parse_cfg:
     mov edi, CFG_PARSE_KEY_ADDR
     mov ecx, CFG_PARSE_BUF_SIZE
 .key_nextc:
-    mov [edi], al
-    inc esi
+    mov [edi], al                   ; 复制当前的字符
+    inc esi                         ; 增加寄存器
     inc edi
-    dec edx
+    dec edx                         ; 检查是否到达文件末尾
     jz .eof
-    mov al, [esi]
-    cmp al, 0x3D                    ; =
-    je .parse_key
-    cmp al, 0x0A                    ; \n
+    mov al, [esi]                   ; 检查下一个字符
+    cmp al, 0x3D                    ; 为 =
+    je .parse_key                   ; key 读取完毕
+    cmp al, 0x0A                    ; 为 \n
     je .invaild_key                 ; 非法 key
-    loop .key_nextc
-    mov esi, too_long_key_str
-    call print_string
+    cmp al, 0x0D                    ; 为 \r
+    je .invaild_key                 ; 非法 key
+    loop .key_nextc                 ; 继续复制 key
+    mov esi, too_long_key_str       ; 到达缓冲区末尾
+    call print_string               ; 报错退出
     popad
     stc
     ret
 .parse_key:
+    mov [edi], 0                    ; 确保 \0 结尾
     mov ebx, esi
     inc ebx
     dec edx
@@ -1644,12 +1651,9 @@ parse_cfg:
     je .eof
 
     mov esi, CFG_PARSE_KEY_ADDR
-    mov edi, boot_name_str
+    mov edi, bootname_str
     call cmp_str
-    jnc .boot_name
-    mov edi, kernel_path_str
-    call cmp_str
-    jnc .kernel_path
+    jnc .bootname
     mov edi, kernel_cmdline_str
     call cmp_str
     jnc .kernel_cmdline
@@ -1662,11 +1666,8 @@ parse_cfg:
     popad
     stc
     ret
-.boot_name:
+.bootname:
     mov edi, CFG_BOOT_NAME
-    jmp .parse_val
-.kernel_path:
-    mov edi, CFG_KERNEL_PATH
     jmp .parse_val
 .kernel_cmdline:
     mov edi, CFG_KERNEL_CMDLINE
@@ -1722,6 +1723,31 @@ parse_cfg:
     call put_lf
     popad
     stc
+    ret
+
+; 从 CFG_KERNEL_CMDLINE 获取 kernel path
+; 放在 CFG_KERNEL_PATH
+get_filename:
+    pushad
+    xor eax, eax                        ; 清空缓冲区
+    mov ecx, CFG_PARSE_BUF_SIZE + 1     ; 多清除一个作为末尾的 0
+    mov edi, CFG_KERNEL_PATH
+    rep stosb
+
+    mov esi, CFG_KERNEL_CMDLINE
+    mov edi, CFG_KERNEL_PATH
+.copy_next:
+    mov al, [esi]
+    cmp al, 0
+    je .ok
+    cmp al, 0x20
+    je .ok
+    mov [edi], al
+    inc esi
+    inc edi
+    jmp .copy_next
+.ok:
+    popad
     ret
 
 
@@ -1947,9 +1973,8 @@ ok_kernel_str       db 'Loading kernel...', 0
 cannot_loadker_str  db 'Cannot load kernel to memory.', 0
 bootloader_name_str db 'Door Loader', 0
 
-boot_name_str       db 'boot_name', 0
-kernel_path_str     db 'kernel_path', 0
-kernel_cmdline_str  db 'kernel_cmdline', 0
+bootname_str        db 'bootname', 0
+kernel_cmdline_str  db 'kernel', 0
 
 loader_cfg_path_str db 'boot/loader.cfg', 0
 
