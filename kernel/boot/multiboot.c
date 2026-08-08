@@ -1,6 +1,7 @@
 // kernel/boot/multiboot.c
 
 #include "lib/string.h"
+#include "assert.h"
 #include "printk.h"
 #include "panic.h"
 #define __BOOT_MULTIBOOT_C
@@ -108,8 +109,7 @@ static int make_mmap()
     if (!(mboot_info->flags & MB_INFO_MEM))
         return -1;
 
-    if (MMAP_L_MAX_COUNT < 1 || MMAP_U_MAX_COUNT < 1)
-        panic("too low MMAP_L_MAX_COUNT and MMAP_U_MAX_COUNT");
+    assert(MMAP_L_MAX_COUNT >= 1 && MMAP_U_MAX_COUNT >= 1);
 
     if (!(mboot_info->flags & MB_INFO_MEM))
     {

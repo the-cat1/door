@@ -7,7 +7,7 @@
 #include "printk.h"
 #include "panic.h"
 
-void _panic(const char *file, const char *func, int line, const char *fmt, ...)
+void _panic(const char *file, int line, const char *func, const char *fmt, ...)
 {
     va_list args;
     char buf[1024];
