@@ -6,10 +6,7 @@
 
 void kmain(void)
 {
-    if (copy_multiboot_info())
-    {
-        printk("NOOOOOO");
-    }
+    copy_multiboot_info();
 
     while (1)
         ;

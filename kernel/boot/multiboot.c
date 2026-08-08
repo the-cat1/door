@@ -2,6 +2,7 @@
 
 #include "lib/string.h"
 #include "printk.h"
+#include "panic.h"
 #define __BOOT_MULTIBOOT_C
 #include "boot.h"
 
@@ -108,10 +109,7 @@ static int make_mmap()
         return -1;
 
     if (MMAP_L_MAX_COUNT < 1 || MMAP_U_MAX_COUNT < 1)
-    {
-        printk("Too low MMAP_L_MAX_COUNT and MMAP_U_MAX_COUNT.");
-        return -1;
-    }
+        panic("too low MMAP_L_MAX_COUNT and MMAP_U_MAX_COUNT");
 
     if (!(mboot_info->flags & MB_INFO_MEM))
     {
@@ -139,7 +137,7 @@ static int make_mmap()
 /**
  * @brief 复制必要的 Multiboot 信息
  */
-int copy_multiboot_info()
+void copy_multiboot_info()
 {
     if (mboot_info->flags & MB_INFO_MEM)
     {
@@ -164,12 +162,9 @@ int copy_multiboot_info()
 
     if (!(mboot_info->flags & MB_INFO_MMAP && !copy_mmap()))
     {
-        printk("Cannot read mmap from multiboot_info. Try to make by mem_*.");
+        printk("cannot read mmap from multiboot_info. Try to make by mem_*.");
         if (make_mmap())
-        {
-            printk("Cannot make mmap!");
-            return -1;
-        }
+            panic("cannot make mmap");
     }
 
     if (mboot_info->flags & MB_INFO_BOOT_LOADER_NAME)
@@ -178,6 +173,4 @@ int copy_multiboot_info()
         strncpy(boot_loader_name, (char *)mboot_info->boot_loader_name, BOOT_LOADER_NAME_LEN - 1);
         boot_loader_name[BOOT_LOADER_NAME_LEN - 1] = 0; // 保证 0 结尾
     }
-
-    return 0;
 }

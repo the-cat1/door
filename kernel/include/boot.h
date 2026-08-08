@@ -130,7 +130,7 @@ extern char boot_loader_name[BOOT_LOADER_NAME_LEN];
 #undef __BOOT_MULTIBOOT_C
 #endif
 
-int copy_multiboot_info();
+void copy_multiboot_info();
 
 /* boot/boot.asm */
 #define GDT_CODE_SEG (1 << 3)
