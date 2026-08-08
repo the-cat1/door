@@ -21,7 +21,7 @@ static void set_char_attribute(int row, int col, uint16_t char_attribute)
     *(VIDEO_MEMORY + (row * COLS + col) * 2 + 1) = (char)(char_attribute & 0xFF);
 }
 
-static void scroll_screen()
+void scroll_screen()
 {
     // 向上移动 0 ~ (ROWS - 1) 行
     for (int row = 0; row < ROWS - 1; row++)

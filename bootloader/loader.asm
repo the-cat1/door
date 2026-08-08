@@ -190,7 +190,7 @@ detect_memory_rm:
     mov ecx, [es:di + 8]
     or ecx, [es:di + 12]
     jz .next_entry
-    mov [di + 20], 20
+    mov [di - 4], 20
     inc bp
     add di, 24
 .next_entry:
@@ -1535,8 +1535,8 @@ get_mem_info:
     mov eax, [mmap_size]
     mov ecx, 24
     mul ecx
-    mov dword [MB_INFO_ADDR + 44], MB_MEM_INFO_ADDR
-    mov dword [MB_INFO_ADDR + 48], eax
+    mov dword [MB_INFO_ADDR + 44], eax
+    mov dword [MB_INFO_ADDR + 48], MB_MEM_INFO_ADDR - 4
 
     popad
     clc
@@ -1551,7 +1551,7 @@ get_mem_info:
 ; 参考 https://www.gnu.org/software/grub/manual/multiboot/html_node/Boot-information-format.html
 config_mbinfo:  
     pushad
-    mov dword [MB_INFO_ADDR], 0x0106
+    mov dword [MB_INFO_ADDR], 0x0206
     mov dword [MB_INFO_ADDR + 12], BOOT_DEVICE  ; boot_device
     mov dword [MB_INFO_ADDR + 16], CFG_KERNEL_CMDLINE ; cmdline
     mov dword [MB_INFO_ADDR + 64], bootloader_name_str ; boot_loader_name

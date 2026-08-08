@@ -32,10 +32,6 @@ start:
     mov fs, ax
     mov gs, ax
 
-    mov edi, mboot_info_addr                ; 存储 Multiboot info 结构体
-    sub edi, V_OFFSET
-    mov [edi], edx
-
     ; 清空 .bss
     mov edi, __bss_start
     mov ecx, __bss_end
@@ -43,6 +39,10 @@ start:
     sub edi, V_OFFSET
     xor eax, eax
     rep stosb
+
+    mov edi, mboot_info                ; 存储 Multiboot info 结构体
+    sub edi, V_OFFSET
+    mov [edi], ebx
 
     ; 配置 PTE0 和 PTEK, 内容相同
     xor eax, eax
@@ -124,12 +124,14 @@ gdtr_val:
 
 
 [section .bss]
+global mboot_info, pde
+
 alignb 4
 stack_bottom:
     resb 16384                              ; 16 KB 栈空间
 stack_top:
 
-mboot_info_addr:                            ; Multiboot info 结构体地址
+mboot_info:                            ; Multiboot info 结构体地址
     resb 8
 
 alignb 4096

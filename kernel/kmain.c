@@ -2,11 +2,14 @@
 // Enter point of kernel.
 
 #include "printk.h"
-#include "lib/sprintf.h"
+#include "boot.h"
 
 void kmain(void)
 {
-    printk("Enter kmain().");
+    if (copy_multiboot_info())
+    {
+        printk("NOOOOOO");
+    }
 
     while (1)
         ;
