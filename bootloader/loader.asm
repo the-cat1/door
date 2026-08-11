@@ -1,5 +1,5 @@
 ; Door
-; door/boot/loader.asm
+; bootloader/loader.asm
 
 ; 内核加载器，不完全的 Multiboot 支持
 ; 仅适用于 1.44MB 软盘，FAT12 文件系统

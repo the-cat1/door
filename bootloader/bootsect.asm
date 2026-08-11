@@ -1,5 +1,5 @@
 ; Door
-; door/boot/bootsect.asm
+; bootloader/bootsect.asm
 
 ; Boot sector to load the kernel from disk.
 ; Just for FAT12 and 1.44MB floppy disk.

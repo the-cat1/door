@@ -190,7 +190,7 @@ static size_t uintmax_to_str(struct convert_args *fmt_args, uintmax_t value, boo
 
     // 如果是 8 进制且有 HASH 标志，需要增加精度来添加 0 前缀
     if (base == 8 && fmt_args->flag & FLAG_HASH)
-        fmt_args->precision = MAX(fmt_args->precision, i + 1);
+        fmt_args->precision = max(fmt_args->precision, i + 1);
 
     // 如果数字长度小于精度，前面补 0 或 ‘ ’ (空格)
     int pad_size = fmt_args->precision - i;
@@ -291,7 +291,7 @@ static int convert_string(struct convert_args *fmt_args)
     if (fmt_args->precision < 0)
         fmt_args->precision = INT32_MAX;
 
-    size_t copy_len = MIN((size_t)MIN(fmt_args->end - *fmt_args->ptr, fmt_args->precision), strlen(str));
+    size_t copy_len = min((size_t)min(fmt_args->end - *fmt_args->ptr, fmt_args->precision), strlen(str));
     memcpy(*fmt_args->ptr, str, copy_len);
 
     return copy_len;
@@ -591,9 +591,9 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
         fmt++; // 跳过类型字符
 
-        converted_len = MIN(converted_len, end - ptr);
-        fmt_args.width = MIN(fmt_args.width, end - ptr);
-        int pad_size = MAX(fmt_args.width - converted_len, 0);
+        converted_len = min(converted_len, end - ptr);
+        fmt_args.width = min(fmt_args.width, end - ptr);
+        int pad_size = max(fmt_args.width - converted_len, 0);
 
         if (fmt_args.flag & FLAG_LEFT)
         {
