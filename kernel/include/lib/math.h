@@ -6,8 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define ABS(a) ((a) > 0 ? (a) : -(a))
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define abs(a) ((a) > 0 ? (a) : -(a))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
 
 #endif

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "lib/sprintf.h"
+#include "asm.h"
 #include "printk.h"
 #include "panic.h"
 
@@ -20,5 +21,5 @@ void _panic(const char *file, int line, const char *func, const char *fmt, ...)
     printk("  at %s:%d (%s)", file, line, func);
 
     while (true)
-        __asm__("hlt");
+        hlt();
 }
