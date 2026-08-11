@@ -17,4 +17,4 @@ $(TARGET) : $(OBJS) $(LDSRCIPT)
 	$(CC) -T $(LDSRCIPT) $(OBJS) -o $@ $(LDFLAGS)
 
 clean:
-	$(RM) $(shell find . -iname "*.o") $(TARGET)
+	$(RM) $(OBJS) $(TARGET)
