@@ -79,8 +79,7 @@ void init_video()
  */
 void print_char(char c, char attr)
 {
-    switch (c)
-    {
+    switch (c) {
     case '\n':
         feed_line();
         break;
@@ -95,8 +94,7 @@ void print_char(char c, char attr)
         break;
     }
 
-    if (cursor_pos < VIDEO_COLS * VIDEO_ROWS)
-    {
+    if (cursor_pos < VIDEO_COLS * VIDEO_ROWS) {
         set_cursor_pos();
         return; // needn't scroll
     }
@@ -114,8 +112,7 @@ void print_char(char c, char attr)
 size_t print_string(const char *str)
 {
     size_t count = 0;
-    while (*str)
-    {
+    while (*str) {
         print_char(*str, VIDEO_DEF_ATTR);
         count++;
         str++;

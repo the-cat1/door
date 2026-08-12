@@ -6,8 +6,7 @@
 #include "panic.h"
 #include "irq.h"
 
-struct exception_info
-{
+struct exception_info {
     char *mnemonic;
     char *description;
 };
@@ -33,7 +32,8 @@ static const struct exception_info exceptions[] = {
     RESERVED,
     {"#MF", "Floating-Point Error"},
     {"#AC", "Alignment Check"},
-    {"#MC", "Machine Check"}};
+    {"#MC", "Machine Check"}
+};
 
 static void general_irq(struct irq_frame *frame)
 {
@@ -47,7 +47,7 @@ static void general_irq(struct irq_frame *frame)
 
 /**
  * @brief 注册异常的处理函数
- * 
+ *
  * @note 在 init_irq(irq.c) 中调用
  */
 void register_exceptions()

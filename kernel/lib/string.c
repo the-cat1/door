@@ -45,13 +45,10 @@ void *memmove(void *s1, const void *s2, size_t n)
     const char *s = (const char *)s2;
 
     /* Handle overlapping regions correctly. */
-    if (d < s)
-    {
+    if (d < s) {
         for (size_t i = 0; i < n; i++)
             d[i] = s[i];
-    }
-    else if (d > s)
-    {
+    } else if (d > s) {
         for (size_t i = n; i > 0; i--)
             d[i - 1] = s[i - 1];
     }
@@ -99,8 +96,7 @@ int memcmp(const void *s1, const void *s2, size_t n)
     const unsigned char *a = (const unsigned char *)s1;
     const unsigned char *b = (const unsigned char *)s2;
 
-    for (size_t i = 0; i < n; i++)
-    {
+    for (size_t i = 0; i < n; i++) {
         if (a[i] != b[i])
             return (int)a[i] - (int)b[i];
     }
@@ -125,8 +121,7 @@ void *memchr(const void *s, int c, size_t n)
     const unsigned char *p = (const unsigned char *)s;
     unsigned char uc = (unsigned char)c;
 
-    for (size_t i = 0; i < n; i++)
-    {
+    for (size_t i = 0; i < n; i++) {
         if (p[i] == uc)
             return (void *)(p + i);
     }
@@ -175,16 +170,14 @@ char *strncpy(char *restrict s1, const char *restrict s2, size_t n)
 
     char *d = s1;
 
-    while (n && (*d = *s2))
-    {
+    while (n && (*d = *s2)) {
         d++;
         s2++;
         n--;
     }
 
     /* Pad with null bytes if s2 is shorter than n. */
-    while (n--)
-    {
+    while (n--) {
         *d = '\0';
         d++;
     }
@@ -234,8 +227,7 @@ char *strncat(char *restrict s1, const char *restrict s2, size_t n)
 
     while (*d)
         d++;
-    while (n-- && (*d = *s2))
-    {
+    while (n-- && (*d = *s2)) {
         d++;
         s2++;
     }
@@ -260,8 +252,7 @@ int strcmp(const char *s1, const char *s2)
     if (!s1 || !s2)
         return 0;
 
-    while (*s1 && (*s1 == *s2))
-    {
+    while (*s1 && (*s1 == *s2)) {
         s1++;
         s2++;
     }
@@ -301,8 +292,7 @@ int strncmp(const char *s1, const char *s2, size_t n)
     if (!s1 || !s2)
         return 0;
 
-    for (; n > 0; n--, s1++, s2++)
-    {
+    for (; n > 0; n--, s1++, s2++) {
         if (*s1 != *s2)
             return (int)(unsigned char)*s1 - (int)(unsigned char)*s2;
         if (*s1 == '\0')
@@ -334,11 +324,9 @@ size_t strxfrm(char *restrict s1, const char *restrict s2, size_t n)
     while (*p++)
         len++;
 
-    if (n > 0)
-    {
+    if (n > 0) {
         size_t i = 0;
-        while (i < len && i < n - 1)
-        {
+        while (i < len && i < n - 1) {
             s1[i] = s2[i];
             i++;
         }
@@ -366,8 +354,7 @@ char *strchr(const char *s, int c)
 
     char ch = (char)c;
 
-    for (;; s++)
-    {
+    for (;; s++) {
         if (*s == ch)
             return (char *)s;
         if (*s == '\0')
@@ -392,8 +379,7 @@ char *strrchr(const char *s, int c)
     char ch = (char)c;
     const char *found = NULL;
 
-    for (;; s++)
-    {
+    for (;; s++) {
         if (*s == ch)
             found = s;
         if (*s == '\0')
@@ -419,11 +405,9 @@ size_t strspn(const char *s1, const char *s2)
     size_t n = 0;
     const char *p;
 
-    for (p = s1; *p; p++)
-    {
+    for (p = s1; *p; p++) {
         const char *q;
-        for (q = s2; *q; q++)
-        {
+        for (q = s2; *q; q++) {
             if (*p == *q)
                 break;
         }
@@ -451,11 +435,9 @@ size_t strcspn(const char *s1, const char *s2)
     size_t n = 0;
     const char *p;
 
-    for (p = s1; *p; p++)
-    {
+    for (p = s1; *p; p++) {
         const char *q;
-        for (q = s2; *q; q++)
-        {
+        for (q = s2; *q; q++) {
             if (*p == *q)
                 return n;
         }
@@ -480,11 +462,9 @@ char *strpbrk(const char *s1, const char *s2)
 
     const char *p;
 
-    for (p = s1; *p; p++)
-    {
+    for (p = s1; *p; p++) {
         const char *q;
-        for (q = s2; *q; q++)
-        {
+        for (q = s2; *q; q++) {
             if (*p == *q)
                 return (char *)p;
         }
@@ -512,13 +492,11 @@ char *strstr(const char *s1, const char *s2)
     if (!*s2)
         return (char *)s1;
 
-    for (p = s1; *p; p++)
-    {
+    for (p = s1; *p; p++) {
         const char *a = p;
         const char *b = s2;
 
-        while (*a && *b && (*a == *b))
-        {
+        while (*a && *b && (*a == *b)) {
             a++;
             b++;
         }
@@ -556,8 +534,7 @@ char *strtok(char *restrict s1, const char *restrict s2)
     while (*save && strchr(s2, *save))
         save++;
 
-    if (!*save)
-    {
+    if (!*save) {
         save = NULL;
         return NULL;
     }
@@ -568,13 +545,10 @@ char *strtok(char *restrict s1, const char *restrict s2)
     while (*save && !strchr(s2, *save))
         save++;
 
-    if (*save)
-    {
+    if (*save) {
         *save = '\0';
         save++;
-    }
-    else
-    {
+    } else {
         save = NULL;
     }
 

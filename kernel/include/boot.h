@@ -7,8 +7,8 @@
 
 /* boot/multiboot.c */
 
-#define MMAP_L_MAX_COUNT 4      // 最大低端可用 mmap 数量，多的会被忽略
-#define MMAP_U_MAX_COUNT 16     // 最大高端可用 mmap 数量，多的会被忽略
+#define MMAP_L_MAX_COUNT 4 // 最大低端可用 mmap 数量，多的会被忽略
+#define MMAP_U_MAX_COUNT 16 // 最大高端可用 mmap 数量，多的会被忽略
 #define BOOT_LOADER_NAME_LEN 64 // boot_loader_name 长度
 
 // See https://www.gnu.org/software/grub/manual/multiboot/html_node/Boot-information-format.html#Boot-information-format
@@ -34,74 +34,65 @@
 #define MB_MMAP_DEFECTIVE 5
 
 // Multiboot information, provides by loader
-struct multiboot_info
-{
-    // offset 0: flags
-    uint32_t flags;       // 0
-    uint32_t mem_lower;   // 4
-    uint32_t mem_upper;   // 8
-    uint32_t boot_device; // 12
-    uint32_t cmdline;     // 16
-    uint32_t mods_count;  // 20
-    uint32_t mods_addr;   // 24
-    union
-    {
-        struct
-        {
-            uint32_t tabsize;  // 28
-            uint32_t strsize;  // 32
-            uint32_t addr;     // 36
-            uint32_t reserved; // 40
+struct multiboot_info {
+    uint32_t flags;
+    uint32_t mem_lower;
+    uint32_t mem_upper;
+    uint32_t boot_device;
+    uint32_t cmdline;
+    uint32_t mods_count;
+    uint32_t mods_addr;
+    union {
+        struct {
+            uint32_t tabsize;
+            uint32_t strsize;
+            uint32_t addr;
+            uint32_t reserved;
         } aout;
-        struct
-        {
-            uint32_t num;   // 28
-            uint32_t size;  // 32
-            uint32_t addr;  // 36
-            uint32_t shndx; // 40
+        struct {
+            uint32_t num;
+            uint32_t size;
+            uint32_t addr;
+            uint32_t shndx;
         } elf;
-    } syms;                      // 28
-    uint32_t mmap_length;        // 44
-    uint32_t mmap_addr;          // 48
-    uint32_t drives_length;      // 52
-    uint32_t drives_addr;        // 56
-    uint32_t config_table;       // 60
-    uint32_t boot_loader_name;   // 64
-    uint32_t apm_table;          // 68
-    uint32_t vbe_control_info;   // 72
-    uint32_t vbe_mode_info;      // 76
-    uint16_t vbe_mode;           // 80
-    uint16_t vbe_interface_seg;  // 82
-    uint16_t vbe_interface_off;  // 84
-    uint16_t vbe_interface_len;  // 86
-    uint64_t framebuffer_addr;   // 88
-    uint32_t framebuffer_pitch;  // 96
-    uint32_t framebuffer_width;  // 100
-    uint32_t framebuffer_height; // 104
-    uint8_t framebuffer_bpp;     // 108
-    uint8_t framebuffer_type;    // 109
-    union
-    {
-        struct
-        {
-            uint32_t framebuffer_palette_addr; // 110
+    } syms;
+    uint32_t mmap_length;
+    uint32_t mmap_addr;
+    uint32_t drives_length;
+    uint32_t drives_addr;
+    uint32_t config_table;
+    uint32_t boot_loader_name;
+    uint32_t apm_table;
+    uint32_t vbe_control_info;
+    uint32_t vbe_mode_info;
+    uint16_t vbe_mode;
+    uint16_t vbe_interface_seg;
+    uint16_t vbe_interface_off;
+    uint16_t vbe_interface_len;
+    uint64_t framebuffer_addr;
+    uint32_t framebuffer_pitch;
+    uint32_t framebuffer_width;
+    uint32_t framebuffer_height;
+    uint8_t framebuffer_bpp;
+    uint8_t framebuffer_type;
+    union {
+        struct {
+            uint32_t framebuffer_palette_addr;
             uint16_t framebuffer_palette_num_colors;
         };
-        struct
-        {
-            uint8_t framebuffer_red_field_position;   // 110
-            uint8_t framebuffer_red_mask_size;        // 111
-            uint8_t framebuffer_green_field_position; // 112
-            uint8_t framebuffer_green_mask_size;      // 113
-            uint8_t framebuffer_blue_field_position;  // 114
-            uint8_t framebuffer_blue_mask_size;       // 115
+        struct {
+            uint8_t framebuffer_red_field_position;
+            uint8_t framebuffer_red_mask_size;
+            uint8_t framebuffer_green_field_position;
+            uint8_t framebuffer_green_mask_size;
+            uint8_t framebuffer_blue_field_position;
+            uint8_t framebuffer_blue_mask_size;
         };
-    } color_info; // 110
+    } color_info;
 } __attribute__((packed));
 
 // multiboot module
-struct multiboot_mod
-{
+struct multiboot_mod {
     uint32_t mod_start;
     uint32_t mod_end;
     uint32_t string;
@@ -109,12 +100,11 @@ struct multiboot_mod
 } __attribute__((packed));
 
 // multiboot mmap
-struct multiboot_mmap
-{
-    uint32_t size;   // -4
-    uint64_t base;   // 0
-    uint64_t length; // 8
-    uint32_t type;   // 16
+struct multiboot_mmap {
+    uint32_t size;
+    uint64_t base;
+    uint64_t length;
+    uint32_t type;
 } __attribute__((packed));
 
 #ifdef __BOOT_MULTIBOOT_C

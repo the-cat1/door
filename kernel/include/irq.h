@@ -3,8 +3,7 @@
 #ifndef __INTERRUPT_H
 #define __INTERRUPT_H
 
-struct irq_frame
-{
+struct irq_frame {
     // 通用寄存器
     unsigned long ax, bx, cx, dx, si, di, sp, bp;
     // 段寄存器

@@ -13,8 +13,7 @@
 #define DESC_ATTR_DPL3 0b11101110
 
 // 中断门描述符
-struct gate_desc
-{
+struct gate_desc {
     uint16_t offset_low;
     uint16_t seg_selector;
     uint8_t reserved;
@@ -23,7 +22,7 @@ struct gate_desc
 } __attribute__((packed));
 
 extern const uint32_t irq_proc_table[DESC_COUNT]; // idt_proc.asm
-extern void register_exceptions();                // exceptions.c
+extern void register_exceptions(); // exceptions.c
 
 static struct gate_desc idt[DESC_COUNT];
 static irq_callback irq_callbacks[DESC_COUNT];
@@ -63,15 +62,15 @@ void register_irq(int irq, irq_callback cb)
  */
 void init_irq()
 {
-    for (int i = 0; i < DESC_COUNT; i++)
-    {
+    for (int i = 0; i < DESC_COUNT; i++) {
         uint32_t irq_proc = irq_proc_table[i];
         idt[i] = (struct gate_desc){
             .offset_low = irq_proc & 0x0000FFFF,
             .offset_high = irq_proc >> 16,
             .seg_selector = GDT_CODE_SEG,
             .attribute = DESC_ATTR_DPL0,
-            .reserved = 0};
+            .reserved = 0
+        };
     }
 
     // 加载 LDTR

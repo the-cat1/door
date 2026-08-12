@@ -1,0 +1,20 @@
+# .clang-format
+---
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+AlignTrailingComments: false
+AlignAfterOpenBracket: BlockIndent
+AllowShortIfStatementsOnASingleLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Linux
+ColumnLimit: 120
+UseTab: Never
+IndentWidth: 4
+TabWidth: 4
+IndentCaseLabels: false
+FixNamespaceComments: false
+SortIncludes: false
+...
