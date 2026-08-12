@@ -272,10 +272,12 @@ static int convert_string(struct convert_args *fmt_args)
     if (!str)
         str = "[NULL]";
 
-    if (fmt_args->precision < 0)
-        fmt_args->precision = INT32_MAX;
+    size_t precision = INT32_MAX;
+    if (fmt_args->precision >= 0)
+        precision = fmt_args->precision;
 
-    size_t copy_len = min((size_t)min(fmt_args->end - *fmt_args->ptr, fmt_args->precision), strlen(str));
+    size_t max_len = fmt_args->end - *fmt_args->ptr;
+    size_t copy_len = min(min(max_len, precision), strlen(str)); // 最小的作为复制长度
     memcpy(*fmt_args->ptr, str, copy_len);
 
     return copy_len;

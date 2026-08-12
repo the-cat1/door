@@ -4,6 +4,7 @@ BasedOnStyle: LLVM
 AccessModifierOffset: -4
 AlignTrailingComments: false
 AlignAfterOpenBracket: BlockIndent
+AlignEscapedNewlines: Left
 AllowShortIfStatementsOnASingleLine: false
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
