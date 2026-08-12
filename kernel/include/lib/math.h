@@ -5,11 +5,10 @@
 
 /* Need GNU C */
 #ifndef __GNUC__
-#error math.h needs GNU C
+#error lib/math.h needs GNU C
 #endif
 
-#define __math_same_type(a, b) __builtin_types_compatible_p(typeof(a), typeof(b))
-#define __math_must_same_type(a, b) static_assert(__math_same_type((a), (b)), "type mismatch")
+#include "compiler.h"
 
 /**
  * @brief 返回 a 的绝对值
@@ -29,12 +28,12 @@
  * @warning 勿使用常数，要和常数比较，使用 minc
  * @note 这个宏会检查输入的类型是否相等
  */
-#define min(a, b)                              \
-    ({                                         \
-        typeof(a) _min_a = (a);                \
-        typeof(b) _min_b = (b);                \
-        __math_must_same_type(_min_a, _min_b); \
-        _min_a > _min_b ? _min_b : _min_a;     \
+#define min(a, b)                          \
+    ({                                     \
+        typeof(a) _min_a = (a);            \
+        typeof(b) _min_b = (b);            \
+        must_same_type(_min_a, _min_b);    \
+        _min_a > _min_b ? _min_b : _min_a; \
     })
 
 /**
@@ -55,12 +54,12 @@
  * @warning 不要使用常数，要和常数比较，使用 maxc
  * @note 这个宏会检查输入的类型是否相等
  */
-#define max(a, b)                              \
-    ({                                         \
-        typeof(a) _max_a = (a);                \
-        typeof(b) _max_b = (b);                \
-        __math_must_same_type(_max_a, _max_b); \
-        _max_a > _max_b ? _max_a : _max_b;     \
+#define max(a, b)                          \
+    ({                                     \
+        typeof(a) _max_a = (a);            \
+        typeof(b) _max_b = (b);            \
+        must_same_type(_max_a, _max_b);    \
+        _max_a > _max_b ? _max_a : _max_b; \
     })
 
 /**

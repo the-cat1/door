@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
+#include "array_size.h"
 #include "panic.h"
 #include "irq.h"
 
@@ -39,7 +40,7 @@ static void general_irq(struct irq_frame *frame)
 {
     struct exception_info info = RESERVED;
 
-    if (frame->irq >= 0 && frame->irq < sizeof(exceptions) / sizeof(exceptions[0]))
+    if (frame->irq >= 0 && frame->irq < array_size(exceptions))
         info = exceptions[frame->irq];
 
     panic("exception: (IRQ%d) %s", frame->irq, info.description);
