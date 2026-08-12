@@ -25,7 +25,7 @@ extern const uint32_t irq_proc_table[DESC_COUNT]; // idt_proc.asm
 extern void register_exceptions(); // exceptions.c
 
 static struct gate_desc idt[DESC_COUNT];
-static irq_callback irq_callbacks[DESC_COUNT];
+static irq_handler irq_handlers[DESC_COUNT];
 
 /**
  * @brief irq 处理，寻找对应的回调函数并调用
@@ -37,8 +37,8 @@ void int_common(struct irq_frame *frame)
 {
     int irq = frame->irq;
     assert(0 <= irq && irq < DESC_COUNT);
-    if (irq_callbacks[irq])
-        irq_callbacks[irq](frame);
+    if (irq_handlers[irq])
+        irq_handlers[irq](frame);
     else
         printk("no interrupt handler for %d", irq);
 }
@@ -47,14 +47,14 @@ void int_common(struct irq_frame *frame)
  * @brief 注册一个 IRQ 回调函数
  *
  * @param irq 要注册的 IRQ 号
- * @param cb 回调函数
+ * @param handler 处理函数
  */
-void register_irq(int irq, irq_callback cb)
+void register_irq(int irq, irq_handler handler)
 {
     assert(0 <= irq && irq < DESC_COUNT);
-    assert(!irq_callbacks[irq]);
+    assert(!irq_handlers[irq]);
 
-    irq_callbacks[irq] = cb;
+    irq_handlers[irq] = handler;
 }
 
 /**

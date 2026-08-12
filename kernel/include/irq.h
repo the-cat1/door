@@ -24,10 +24,10 @@ struct irq_frame {
     unsigned short org_ss, __org_ssh;
 };
 
-// irq 回调
-typedef void (*irq_callback)(struct irq_frame *);
+// irq 处理函数
+typedef void (*irq_handler)(struct irq_frame *);
 
 void init_irq();
-void register_irq(int irq, irq_callback cb);
+void register_irq(int irq, irq_handler cb);
 
 #endif
