@@ -20,6 +20,7 @@ void _panic(const char *file, int line, const char *func, const char *fmt, ...)
     printk("kernel panic: %s", buf);
     printk("  at %s:%d (%s)", file, line, func);
 
+    cli(); // 关闭中断
     while (true)
         hlt();
 }

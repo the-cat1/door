@@ -23,6 +23,7 @@ struct gate_desc
 } __attribute__((packed));
 
 extern const uint32_t irq_proc_table[DESC_COUNT]; // idt_proc.asm
+extern void register_exceptions();                // exceptions.c
 
 static struct gate_desc idt[DESC_COUNT];
 static irq_callback irq_callbacks[DESC_COUNT];
@@ -76,6 +77,8 @@ void init_irq()
     // 加载 LDTR
     uint64_t idtr = (uint64_t)(uint32_t)idt << 16 | (sizeof(idt) - 1);
     asm("lidt %0" ::"m"(idtr));
+
+    register_exceptions(); // 注册异常
 
     printk("initialize irq ok");
 }
