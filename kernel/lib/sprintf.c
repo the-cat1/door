@@ -550,9 +550,9 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
         fmt++; // 跳过类型字符
 
-        converted_len = min(converted_len, end - ptr);
-        fmt_args.width = min(fmt_args.width, end - ptr);
-        int pad_size = max(fmt_args.width - converted_len, 0);
+        converted_len = min(converted_len, (int)(end - ptr)); // 限制转换出来的长度和输出宽度
+        fmt_args.width = min(fmt_args.width, (int)(end - ptr));
+        int pad_size = maxc(fmt_args.width - converted_len, 0);
 
         if (fmt_args.flag & FLAG_LEFT) {
             ptr += converted_len;
