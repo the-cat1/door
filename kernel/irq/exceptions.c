@@ -40,7 +40,7 @@ static void general_irq(struct irq_frame *frame)
 {
     struct exception_info info = RESERVED;
 
-    if (frame->irq >= 0 && frame->irq < array_size(exceptions))
+    if (frame->irq >= 0 && frame->irq < (int)array_size(exceptions))
         info = exceptions[frame->irq];
 
     panic("exception: (IRQ%d) %s", frame->irq, info.description);
