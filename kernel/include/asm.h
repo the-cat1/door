@@ -42,4 +42,19 @@ static inline uint8_t inb(uint16_t port)
     return ret;
 }
 
+static inline unsigned int read_eflags()
+{
+    unsigned int flags;
+    asm("pushf\n\t"
+        "popl %0"
+        : "=r"(flags));
+    return flags;
+}
+
+static inline void write_eflags(unsigned int flags)
+{
+    asm("pushl %0\n\t"
+        "popf" ::"r"(flags));
+}
+
 #endif

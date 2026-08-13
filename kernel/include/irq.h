@@ -28,6 +28,8 @@ struct irq_frame {
 typedef void (*irq_handler)(struct irq_frame *);
 
 void init_irq();
-void register_irq(int irq, irq_handler cb);
+void register_irq(int irq, irq_handler handler);
+
+void send_eoi();
 
 #endif

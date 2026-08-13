@@ -5,13 +5,18 @@
 
 #include "asm.h"
 #include "boot.h"
+#include "device/timer.h"
 #include "irq.h"
+#include "printk.h"
 #include "video.h"
 
 void kmain(void)
 {
     init_video();
     init_irq();
+    init_timer();
+    sti();
+
     copy_multiboot_info();
 
     while (true)

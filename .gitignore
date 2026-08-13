@@ -6,6 +6,7 @@
 # IDE / EDITOR
 .vscode
 *.code-workspace
+compile_commands.json
 
 # Mid-files
 *.o
