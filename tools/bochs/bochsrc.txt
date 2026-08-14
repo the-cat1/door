@@ -6,14 +6,11 @@ config_interface: textconfig
 
 cpu: model=core2_penryn_t9600, count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
 cpu: cpuid_limit_winnt=0
-# romimage: file=$BXSHARE/BIOS-bochs-latest 
-# vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 vga: extension=vbe, update_freq=5
 keyboard: type=mf, serial_delay=250, paste_delay=100000, user_shortcut=none
 mouse: type=ps2, enabled=0, toggle=ctrl+mbutton
 pci: enabled=1, chipset=i440fx
 clock: sync=none, time0=utc, rtc_sync=0
-# clock: sync=realtime, time0=utc
 private_colormap: enabled=0
 
 # 软盘启动的配置，a.img为软盘名
@@ -33,7 +30,6 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 boot: floppy
 # boot: disk
 
-floppy_bootsig_check: disabled=1
 log: -
 logprefix: %t%e%d
 panic: action=ask
