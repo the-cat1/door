@@ -13,6 +13,8 @@
 void kmain(void)
 {
     init_video();
+    printk("door kernel");
+
     init_irq();
     init_timer();
     sti();

@@ -16,6 +16,7 @@
 #define FLAG_HASH 0x0008
 #define FLAG_ZERO 0x0010
 
+// 长度修饰符
 enum LengthModifier {
     LENGTH_NONE,
     LENGTH_HH,
@@ -38,6 +39,9 @@ struct convert_args {
     va_list *args;
 };
 
+static const char digits_lower[] = "0123456789abcdef";
+static const char digits_upper[] = "0123456789ABCDEF";
+
 static void write_wrong_format(char **ptr, char *end)
 {
     static const char *wrong_format = "[WRONG FORMAT]";
@@ -50,7 +54,6 @@ static void write_wrong_format(char **ptr, char *end)
     }
 }
 
-// only postive numbers are supported
 static int parse_str_to_int(const char **str, int *value)
 {
     char buf[12]; // 最大 2,147,483,647，10 个字符
@@ -88,7 +91,7 @@ static int parse_str_to_int(const char **str, int *value)
 }
 
 /**
- * 读取不同大小的有符号整数
+ * @brief 读取不同大小的有符号整数
  *
  * @param fmt_args fmt 参数列表
  * @return 返回读取的整数值
@@ -165,9 +168,6 @@ static uintmax_t get_va_arg_uint(struct convert_args *fmt_args)
  */
 static size_t uintmax_to_str(struct convert_args *fmt_args, uintmax_t value, bool is_upper, int base)
 {
-    static const char digits_lower[] = "0123456789abcdef";
-    static const char digits_upper[] = "0123456789ABCDEF";
-
     if (base < 8 || base > 16)
         return 0;
 
@@ -252,17 +252,14 @@ static int convert_int(struct convert_args *fmt_args, bool is_upper, bool is_uns
             ptr[i++] = ' ';
     }
 
-    int result_len = i;
-
     /* 反转字符串 */
-    for (int j = 0; j < result_len / 2; j++) {
-        char tmp;
-        tmp = ptr[result_len - j - 1];
-        ptr[result_len - j - 1] = ptr[j];
+    for (size_t j = 0; j < i / 2; j++) {
+        char tmp = ptr[i - j - 1];
+        ptr[i - j - 1] = ptr[j];
         ptr[j] = tmp;
     }
 
-    return result_len;
+    return i;
 }
 
 static int convert_string(struct convert_args *fmt_args)
@@ -290,6 +287,69 @@ static int convert_pointer(struct convert_args *fmt_args)
     fmt_args->length = LENGTH_Z;
 
     return convert_int(fmt_args, false, true, 16);
+}
+
+// this function may have some problems
+static int convert_float(struct convert_args *fmt_args)
+{
+    long double value = 0;
+    if (fmt_args->length == LENGTH_L_CAPITAL)
+        value = va_arg(*fmt_args->args, long double);
+    else
+        value = va_arg(*fmt_args->args, double);
+
+    bool is_negative = value < 0;
+    value = abs(value);
+
+    if (fmt_args->precision < 0)
+        fmt_args->precision = 6; // 默认精度
+
+    int i = 0;
+    char *ptr = *fmt_args->ptr;
+    size_t max_len = fmt_args->end - ptr;
+    int n = -fmt_args->precision;
+    while ((size_t)i < max_len - 1) {
+        long double f = 1;
+        for (int _ = 0; _ < abs(n); _++)
+            f *= n < 0 ? 0.1 : 10;
+        n++;
+
+        uintmax_t digit = (uintmax_t)(value / f); // 可能不能依靠 uintmax_t, 如果结果太大会溢出
+        if (n > 1 && digit <= 0) // 小数点前，除之后等于 0 就跳出
+            break;
+        digit %= 10;
+        ptr[i++] = '0' + digit;
+
+        if (n == 0)
+            ptr[i++] = '.';
+    }
+
+    if ((size_t)i < max_len - 1) { // 判断缓冲区大小是否充足
+        if (is_negative) {
+            // 负数直接加负号
+            ptr[i++] = '-';
+        } else {
+            // 正数视情况再加
+            if (fmt_args->flag & FLAG_PLUS)
+                ptr[i++] = '+';
+            else if (fmt_args->flag & FLAG_SPACE)
+                ptr[i++] = ' ';
+        }
+    }
+
+    if (fmt_args->flag & FLAG_ZERO) {
+        int padwidth = fmt_args->width - i;
+        for (int j = 0; j < padwidth && (size_t)i < max_len; j++)
+            ptr[i++] = '0';
+    }
+
+    for (int j = 0; j < i / 2; j++) {
+        char tmp = ptr[i - j - 1];
+        ptr[i - j - 1] = ptr[j];
+        ptr[j] = tmp;
+    }
+
+    return i;
 }
 
 // 往 ptr 写 pad_size 个填充符号
@@ -530,6 +590,10 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
         case 'p':
             converted_len = convert_pointer(&fmt_args);
+            break;
+
+        case 'f':
+            converted_len = convert_float(&fmt_args);
             break;
 
         case 'n': // 将已写入的字符数存储到参数中
