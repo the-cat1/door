@@ -289,69 +289,6 @@ static int convert_pointer(struct convert_args *fmt_args)
     return convert_int(fmt_args, false, true, 16);
 }
 
-// this function may have some problems
-static int convert_float(struct convert_args *fmt_args)
-{
-    long double value = 0;
-    if (fmt_args->length == LENGTH_L_CAPITAL)
-        value = va_arg(*fmt_args->args, long double);
-    else
-        value = va_arg(*fmt_args->args, double);
-
-    bool is_negative = value < 0;
-    value = abs(value);
-
-    if (fmt_args->precision < 0)
-        fmt_args->precision = 6; // 默认精度
-
-    int i = 0;
-    char *ptr = *fmt_args->ptr;
-    size_t max_len = fmt_args->end - ptr;
-    int n = -fmt_args->precision;
-    while ((size_t)i < max_len - 1) {
-        long double f = 1;
-        for (int _ = 0; _ < abs(n); _++)
-            f *= n < 0 ? 0.1 : 10;
-        n++;
-
-        uintmax_t digit = (uintmax_t)(value / f); // 可能不能依靠 uintmax_t, 如果结果太大会溢出
-        if (n > 1 && digit <= 0) // 小数点前，除之后等于 0 就跳出
-            break;
-        digit %= 10;
-        ptr[i++] = '0' + digit;
-
-        if (n == 0)
-            ptr[i++] = '.';
-    }
-
-    if ((size_t)i < max_len - 1) { // 判断缓冲区大小是否充足
-        if (is_negative) {
-            // 负数直接加负号
-            ptr[i++] = '-';
-        } else {
-            // 正数视情况再加
-            if (fmt_args->flag & FLAG_PLUS)
-                ptr[i++] = '+';
-            else if (fmt_args->flag & FLAG_SPACE)
-                ptr[i++] = ' ';
-        }
-    }
-
-    if (fmt_args->flag & FLAG_ZERO) {
-        int padwidth = fmt_args->width - i;
-        for (int j = 0; j < padwidth && (size_t)i < max_len; j++)
-            ptr[i++] = '0';
-    }
-
-    for (int j = 0; j < i / 2; j++) {
-        char tmp = ptr[i - j - 1];
-        ptr[i - j - 1] = ptr[j];
-        ptr[j] = tmp;
-    }
-
-    return i;
-}
-
 // 往 ptr 写 pad_size 个填充符号
 static void pad(struct convert_args *fmt_args, int pad_size)
 {
@@ -590,10 +527,6 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
         case 'p':
             converted_len = convert_pointer(&fmt_args);
-            break;
-
-        case 'f':
-            converted_len = convert_float(&fmt_args);
             break;
 
         case 'n': // 将已写入的字符数存储到参数中

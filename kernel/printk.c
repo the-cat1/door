@@ -14,7 +14,7 @@ void printk(const char *format, ...)
     char buffer[1024];
 
     // 打印头
-    snprintf(buffer, sizeof(buffer), "[%06.2Lf] ", (long double)ticks / TICKS_FREQ);
+    snprintf(buffer, sizeof(buffer), "[%03u.%03u] ", ticks / TICKS_FREQ, ticks % TICKS_FREQ * 1000 / TICKS_FREQ);
     print_string(buffer);
 
     va_start(args, format);
