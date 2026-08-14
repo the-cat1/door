@@ -34,10 +34,15 @@ do_int:
     push ecx
     push ebx
     push eax
+    mov ax, ss              ; 设置段寄存器
+    mov ds, ax
+    mov es, ax
+    mov gs, ax
+    mov fs, ax
     push esp                ; 压入栈帧地址
     call int_common         ; 调用函数
     add esp, 4              ; 弹出参数
-    pop eax
+    pop eax                 ; 恢复上下文
     pop ebx
     pop ecx
     pop edx

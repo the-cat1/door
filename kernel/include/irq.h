@@ -1,7 +1,7 @@
-// kernel/include/interrupt.h
+// kernel/include/irq.h
 
-#ifndef __INTERRUPT_H
-#define __INTERRUPT_H
+#ifndef __IRQ_H
+#define __IRQ_H
 
 struct irq_frame {
     // 通用寄存器
@@ -30,6 +30,7 @@ typedef void (*irq_handler)(struct irq_frame *);
 void init_irq();
 void register_irq(int irq, irq_handler handler);
 
+// 向 PIC 发送 End Of Interrupt
 void send_eoi();
 
 #endif
