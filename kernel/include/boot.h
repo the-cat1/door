@@ -129,8 +129,17 @@ void copy_multiboot_info();
 extern struct multiboot_info *mboot_info;
 
 /* linker.ld */
-extern void *V_OFFSET;
-extern void *__bss_start;
-extern void *__bss_end;
+extern int V_OFFSET[];
+extern int KERNEL_PMA[];
+extern int KERNEL_VMA[];
+extern int __text_start[];
+extern int __text_end[];
+extern int __rodata_start[];
+extern int __rodata_end[];
+extern int __data_start[];
+extern int __data_end[];
+extern int __bss_start[];
+extern int __bss_end[];
+extern int __kernel_end[];
 
 #endif

@@ -74,4 +74,18 @@
         _maxc_a > _maxc_c ? _maxc_a : _maxc_c; \
     })
 
+/**
+ * @berif 向下取 a 到 c 的倍数
+ *
+ * @note c 为常数
+ */
+#define down_to(a, c) ((a) / (c) * (c))
+
+/**
+ * @berif 向上取 a 到 c 的倍数
+ *
+ * @note c 为常数
+ */
+#define up_to(a, c) down_to((a) + (c) - 1, (c))
+
 #endif
