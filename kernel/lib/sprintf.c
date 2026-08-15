@@ -1,4 +1,8 @@
-// kernel/lib/sprintf.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
+// 提供一个简单的 sprintf 函数的集合
 
 #include <stdarg.h>
 #include <stdbool.h>

@@ -1,4 +1,9 @@
-// kernel/include/compiler.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
+// 提供一些编译器相关的宏
+// 目前只有 GNUC 支持 ;)
 
 #ifndef __COMPILER_H
 #define __COMPILER_H

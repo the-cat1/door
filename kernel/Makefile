@@ -1,4 +1,6 @@
-# kernel/Makefile
+# SPDX-FileCopyrightText: 2026 Zhan Zixuan
+#
+# SPDX-License-Identifier: MIT
 
 include ../Makefile.config
 

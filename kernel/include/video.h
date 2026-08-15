@@ -1,4 +1,6 @@
-// kernel/include/video.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __VIDEO_H
 #define __VIDEO_H

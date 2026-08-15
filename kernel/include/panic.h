@@ -1,4 +1,6 @@
-// kernel/include/panic.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __PANIC_H
 #define __PANIC_H

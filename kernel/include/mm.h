@@ -1,4 +1,6 @@
-// kernel/include/mm.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __MM_H
 #define __MM_H

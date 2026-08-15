@@ -1,4 +1,6 @@
-// kernel/include/boot.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __BOOT_H
 #define __BOOT_H

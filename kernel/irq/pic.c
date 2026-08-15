@@ -1,4 +1,8 @@
-// kernel/irq/pic.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
+// 设置 PIC
 
 #include <stdint.h>
 

@@ -1,4 +1,6 @@
-// kernel/include/lib/math.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __LIB_MATH_H
 #define __LIB_MATH_H

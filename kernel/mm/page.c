@@ -1,4 +1,7 @@
-// kernel/mm/page.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
 // 管理一页（4k）的分配和释放
 
 #include <stdbool.h>

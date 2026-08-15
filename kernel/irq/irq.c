@@ -1,4 +1,8 @@
-// kernel/interrupt/idt.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
+// 处理 IDT 和 IRQ
 
 #include <stddef.h>
 #include <stdint.h>

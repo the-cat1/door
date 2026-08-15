@@ -1,4 +1,7 @@
-// kernel/irq/exceptions.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
 // 处理 CPU 内部的中断（异常）
 
 #include <stddef.h>

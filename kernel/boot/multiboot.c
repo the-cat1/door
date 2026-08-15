@@ -1,4 +1,6 @@
-// kernel/boot/multiboot.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #include "lib/string.h"
 #include "assert.h"

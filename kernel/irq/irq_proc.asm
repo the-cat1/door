@@ -1,4 +1,7 @@
-; kernel/interrupt/idt.asm
+; SPDX-FileCopyrightText: 2026 Zhan Zixuan
+;
+; SPDX-License-Identifier: MIT
+
 ; idt的中断处理程序
 
 [bits 32]

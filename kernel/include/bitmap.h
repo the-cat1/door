@@ -1,4 +1,6 @@
-// kernel/include/bitmap.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __BITMAP_H
 #define __BITMAP_H

@@ -1,5 +1,7 @@
-/* linker.ld */
-
+/* SPDX-FileCopyrightText: 2026 Zhan Zixuan
+ *
+ * SPDX-License-Identifier: MIT
+ */
 
 V_OFFSET = 0xC0000000;
 KERNEL_PMA = 0x00100000;

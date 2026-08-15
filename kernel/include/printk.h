@@ -1,4 +1,6 @@
-// kernel/include/printk.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __PRINTK_H
 #define __PRINTK_H

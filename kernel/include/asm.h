@@ -1,4 +1,7 @@
-// kernel/include/asm.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
 // 包括一些汇编操作
 
 #ifndef __ASM_H

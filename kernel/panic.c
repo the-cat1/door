@@ -1,4 +1,6 @@
-// kernel/panic.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #include <stdarg.h>
 #include <stdbool.h>

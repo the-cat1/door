@@ -1,4 +1,7 @@
-// kernel/include/assert.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
 // 提供 assert 宏
 
 #ifndef __ASSERT_H

@@ -1,4 +1,8 @@
-// kernel/video.c
+/*
+ * SPDX-FileCopyrightText: 2026 Zhan Zixuan
+ *
+ * SPDX-License-Identifier: MIT
+ */
 
 #include <stdint.h>
 #include <stddef.h>

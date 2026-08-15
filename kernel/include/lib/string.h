@@ -1,4 +1,6 @@
-// kernel/include/lib/string.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 // ISO C99 - 7.21 String handling <string.h>
 

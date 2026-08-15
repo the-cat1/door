@@ -1,4 +1,10 @@
-// kernel/lib/string.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
+// 提供简单的 string 函数
+// 包含一些扩展，避免处理 null 时发生 #PF 或者其他异常
+// （虽然大概率还是会产生错误 :( ）
 
 #include <stddef.h>
 

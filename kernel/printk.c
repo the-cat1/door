@@ -1,4 +1,8 @@
-// kernel/printk.c
+﻿// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
+// 简单的 printk 实现
 
 #include <stdarg.h>
 #include <stdint.h>

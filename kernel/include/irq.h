@@ -1,4 +1,6 @@
-// kernel/include/irq.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __IRQ_H
 #define __IRQ_H

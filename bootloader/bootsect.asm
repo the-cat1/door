@@ -1,5 +1,6 @@
-; Door
-; bootloader/bootsect.asm
+; SPDX-FileCopyrightText: 2026 Zhan Zixuan
+;
+; SPDX-License-Identifier: MIT
 
 ; Boot sector to load the kernel from disk.
 ; Just for FAT12 and 1.44MB floppy disk.

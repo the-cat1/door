@@ -1,4 +1,6 @@
-// kernel/include/array_size.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __ARRAY_SIZE_H
 #define __ARRAY_SIZE_H

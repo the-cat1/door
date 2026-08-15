@@ -1,4 +1,7 @@
-// kernel/lib/ctype.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
 // 提供字符相关的函数
 
 #ifndef __LIB_CTYPE_H

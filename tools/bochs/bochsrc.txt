@@ -1,5 +1,7 @@
-# tools/bochs/bochsrc.txt
-# bochs 的配置
+# SPDX-FileCopyrightText: 2026 Zhan Zixuan
+#
+# SPDX-License-Identifier: MIT
+
 
 plugin_ctrl: unmapped=1, biosdev=1, speaker=1, extfpuirq=1, parallel=1, serial=1, iodebug=1
 config_interface: textconfig

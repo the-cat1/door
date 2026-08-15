@@ -1,4 +1,6 @@
-// kernel/include/device/timer.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __DEVICE_TIMER_H
 #define __DEVICE_TIMER_H

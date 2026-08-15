@@ -1,4 +1,6 @@
-// kernel/device/timer.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #include <stdint.h>
 
@@ -26,7 +28,5 @@ void init_timer()
     outb(PIT_IO_COUNTER0, (uint8_t)(COUNTER0_VALUE & 0xFF));
     outb(PIT_IO_COUNTER0, (uint8_t)(COUNTER0_VALUE >> 8));
     register_irq(0x20, time_handler);
-    printk(
-        "init timer ok, in freq %lu / counter value %lu = ticks freq %lu", INPUT_FREQ, COUNTER0_VALUE, TICKS_FREQ
-    );
+    printk("init timer ok, in freq %lu / counter value %lu = ticks freq %lu", INPUT_FREQ, COUNTER0_VALUE, TICKS_FREQ);
 }

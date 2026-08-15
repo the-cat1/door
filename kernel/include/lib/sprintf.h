@@ -1,4 +1,6 @@
-// kernel/include/lib/sprintf.h
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
 
 #ifndef __LIB_SPRINTF_H
 #define __LIB_SPRINTF_H

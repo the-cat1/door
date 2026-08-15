@@ -1,5 +1,8 @@
-; kernel/boot/boot.asm
+; SPDX-FileCopyrightText: 2026 Zhan Zixuan
+;
+; SPDX-License-Identifier: MIT
 
+; boot.asm
 
 ; Multiboot
 MB_MAGIC        equ 0x1BADB002

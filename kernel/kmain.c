@@ -1,4 +1,7 @@
-// kernel/main.c
+// SPDX-FileCopyrightText: 2026 Zhan Zixuan
+//
+// SPDX-License-Identifier: MIT
+
 // Enter point of kernel.
 
 #include <stdbool.h>

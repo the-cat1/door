@@ -1,4 +1,7 @@
-# .clang-format
+# SPDX-FileCopyrightText: 2026 Zhan Zixuan
+#
+# SPDX-License-Identifier: MIT
+
 ---
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
