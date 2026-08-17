@@ -97,5 +97,5 @@ void init_irq()
     register_exceptions(); // 注册异常
     init_pic(); // 初始化 PIC
 
-    printk("initialize irq ok");
+    printk("initialized irq");
 }

@@ -272,7 +272,7 @@ void *mm_page_alloc_k(long count)
         return NULL;
 
     for (long k = 0; k < count; k++)
-        set_page_phy(vpage_start + k, ppages[k] + seg->base, PAGE_P); //| PAGE_W);
+        set_page_phy(vpage_start + k, ppages[k] + seg->base, PAGE_P);
     return (void *)(vpage_start * 4096);
 }
 
