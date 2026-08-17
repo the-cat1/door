@@ -72,7 +72,7 @@ size_t bitmap_alloc(struct bitmap *map)
             continue;
 
         // 搜索每一位
-        for (int j = 0; i < 8; j++) {
+        for (int j = 0; j < 8; j++) {
             if (!(byte >> j & 1)) {
                 // 找到空闲的一位，将其置 1
                 byte |= 1 << j;

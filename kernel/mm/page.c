@@ -47,7 +47,7 @@ static void set_page(unsigned long page, uint32_t value)
 {
     uint32_t pde_pa = PDE[page / 1024];
     if (pde_pa == 0)
-        panic("no pte for page %lu", page); // TODO 需要申请一页物理内存
+        panic("pde is zero");
 
     PTES[page] = value;
 }
@@ -115,16 +115,73 @@ static void free_vpage(unsigned long vpage)
     }
 
     // no found
-    printk("free_vpage: wrong vpage %lu, %lu, p%lu", vpage, val, ppage);
+    printk("free_vpage: wrong vpage %lu", vpage);
 }
 
-static unsigned long mm_page_alloc_kv(unsigned long count)
+static int page_alloc_phy(size_t ppages[], struct mm_seg **res_seg, unsigned long count)
+{
+    for (int j = 0; j < SEG_COUNT; j++) {
+        struct mm_seg *seg = &segs[j];
+        if (seg->length == 0)
+            continue;
+
+        size_t i = 0;
+        while (true) {
+            size_t ppage = bitmap_alloc(&seg->map);
+            if (ppage == (size_t)-1)
+                break;
+
+            ppages[i++] = ppage;
+            if (i >= count) {
+                *res_seg = seg;
+                return 0;
+            }
+        }
+
+        // reset ppages
+        for (; i > 0; i--)
+            bitmap_set(&seg->map, ppages[i - 1], 0);
+    }
+
+    return -1; // not enough space
+}
+
+static int create_new_ptek()
+{
+    unsigned long i = up_to_page(__kernel_end) / 1024;
+    for (; i < 1024; i++) {
+        if (PDE[i] != 0)
+            continue;
+
+        size_t ppages[1];
+        struct mm_seg *seg;
+        if (page_alloc_phy(ppages, &seg, 1))
+            return -1;
+
+        unsigned long ppage = ppages[0] + seg->base;
+        PDE[i] = ppage * 4096 | PAGE_P | PAGE_W;
+        return 0;
+    }
+
+    printk("kernel memory may be full");
+    return -1;
+}
+
+
+// 查找一块空闲的虚拟内存
+static unsigned long mm_page_scan_kv(unsigned long count)
 {
     unsigned long page = up_to_page(__kernel_end);
     while (true) {
         uint32_t val = get_page(page);
-        if (val == (uint32_t)-1)
-            panic("cannot find a free virtual page.");
+        if (val == (uint32_t)-1) {
+            if (create_new_ptek())
+                return -1;
+
+            page = up_to_page(__kernel_end);
+            continue;
+        }
+
         if (val == 0) {
             unsigned long start_page = page;
             for (; page < start_page + count - 1; page++)
@@ -165,7 +222,9 @@ void mm_page_init()
         unsigned long seg_base = base + map_pg_count;
         map_len = seg_length / 8; // 根据新的长度重新设置
 
-        unsigned long map_start_pg = mm_page_alloc_kv(map_pg_count);
+        unsigned long map_start_pg = mm_page_scan_kv(map_pg_count);
+        if (map_start_pg == (unsigned long)-1)
+            panic("cannot find virtual memory for bitmap of memory segment %d", i);
         for (unsigned long i = 0; i < map_pg_count; i++)
             set_page_phy(map_start_pg + i, base + i, PAGE_P | PAGE_W);
 
@@ -190,34 +249,17 @@ void mm_page_init()
 void *mm_page_alloc_k(unsigned long count)
 {
     size_t ppages[count];
-    size_t i = 0;
-    unsigned long vpage_start = mm_page_alloc_kv(count);
+    unsigned long vpage_start = mm_page_scan_kv(count);
+    if (vpage_start == (unsigned long)-1)
+        return NULL;
 
-    for (int j = 0; j < SEG_COUNT; j++) {
-        if (segs[j].length == 0)
-            continue;
+    struct mm_seg *seg;
+    if (page_alloc_phy(ppages, &seg, count))
+        return NULL;
 
-        while (true) {
-            unsigned long ppage = bitmap_alloc(&segs[j].map);
-            if (ppage == (unsigned long)-1)
-                break;
-
-            ppages[i++] = ppage;
-            if (i >= count) {
-                for (size_t k = 0; k < count; k++)
-                    set_page_phy(vpage_start + k, ppages[k] + segs[j].base, PAGE_P); //| PAGE_W);
-                return (void *)(vpage_start * 4096);
-            }
-        }
-
-        // no enough/found
-        // reset all
-        for (; i > 0; i--)
-            bitmap_set(&segs[j].map, ppages[i - 1], 0);
-    }
-
-    // no found in every segment
-    return 0;
+    for (size_t k = 0; k < count; k++)
+        set_page_phy(vpage_start + k, ppages[k] + seg->base, PAGE_P); //| PAGE_W);
+    return (void *)(vpage_start * 4096);
 }
 
 void mm_page_free(void *vaddr, unsigned long count)
