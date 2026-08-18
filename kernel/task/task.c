@@ -8,8 +8,8 @@
 #include <stdint.h>
 
 #include "asm.h"
-#include "lib/string.h"
 #include "boot.h"
+#include "lib/string.h"
 #include "frame.h"
 #include "list.h"
 #include "mm.h"
@@ -23,13 +23,26 @@ struct list task_list;
 struct task_struct *cur_task;
 struct task_struct *idle_task;
 
+/**
+ * @berif idle 任务
+ */
 static void idle_task_func()
 {
     while (true)
         hlt();
 }
 
-struct task_struct *task_create(char *name, int priority, uintptr_t start_ip)
+/**
+ * @berif 创建一个任务
+ *
+ * @param name 任务名
+ * @param priority 优先级，大于 0
+ * @return 创建的 task
+ *
+ * @note 如果创建失败，返回 NULL
+ * @warning 创建之后，需要设置 frame 作为任务开始运行的状态
+ */
+struct task_struct *task_create(char *name, int priority)
 {
     struct task_struct *task = mm_page_alloc_k(1);
     if (!task)
@@ -41,13 +54,6 @@ struct task_struct *task_create(char *name, int priority, uintptr_t start_ip)
     task->magic = TASK_STRUCT_MAGIC;
     task->kstack = (void *)((uintptr_t)task + 4096);
     task->frame = (void *)((uintptr_t)task + 4096 - sizeof(struct frame));
-    task->frame->cs = GDT_CODE_SEG;
-    task->frame->ds = GDT_DATA_SEG;
-    task->frame->es = GDT_DATA_SEG;
-    task->frame->fs = GDT_DATA_SEG;
-    task->frame->gs = GDT_DATA_SEG;
-    task->frame->ip = start_ip;
-    task->frame->flags = read_eflags() | 0x00000200; // open if
     task->status = TASK_READY;
     list_push(&task_list, &task->elem);
 
@@ -72,7 +78,7 @@ void task_schedule(struct frame *frame)
             return; // continue run current task
 
         // need task switch
-        if (cur_task->elem.next->next != NULL)
+        if (cur_task->elem.next->next != NULL) // 如果没到达链表尾部，设置 next_task 为下一个
             next_task_elem = cur_task->elem.next;
     }
 
@@ -81,7 +87,7 @@ void task_schedule(struct frame *frame)
     while (!(next_task->status == TASK_RUNNING)) {
         next_task_elem = next_task_elem->next;
         if (next_task_elem->next == NULL)
-            panic("no task to run, is there an idle task?");
+            next_task_elem = &idle_task->elem; // 到达链表尾部，设置为 idle
 
         next_task = list_entry(struct task_struct, elem, next_task_elem);
     }
@@ -95,8 +101,11 @@ void task_schedule(struct frame *frame)
 void init_task()
 {
     list_init(&task_list);
-    idle_task = task_create("idle", 1, (uintptr_t)idle_task_func);
+    idle_task = task_create("idle", 1);
     assert(idle_task);
+    idle_task->frame->cs = GDT_CODE_SEG;
+    idle_task->frame->ip = (unsigned long)idle_task_func;
+    idle_task->frame->flags = 0x00000200;
     task_run(idle_task);
     printk("initialized task");
 }

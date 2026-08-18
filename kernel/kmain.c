@@ -18,18 +18,18 @@
 
 void task_switch_to(struct task_struct *);
 
-void task_1()
+int task_1(void *arg)
 {
     while (true) {
-        printk("hello from task 1!");
+        printk("hello from task 1! %s", arg);
     }
 }
 
-void task_2()
+int task_2(void *arg)
 {
     while (true) {
         // hlt();
-        printk("hello from task 2!");
+        printk("hello from task 2! %s", arg);
     }
 }
 
@@ -44,14 +44,16 @@ void kmain(void)
     mm_page_init();
     init_task();
 
-    struct task_struct *task1 = task_create("LOL task", 20, (uintptr_t)task_1);
+    struct task_struct *task1 = ktask_create("LOL task", 20, task_1, "arg1");
     printk("task %p", task1);
     task_run(task1);
 
-    struct task_struct *task2 = task_create("LOL task 2", 20, (uintptr_t)task_2);
+    struct task_struct *task2 = ktask_create("LOL task 2", 20, task_2, "arg2");
     printk("task %p", task2);
     task_run(task2);
 
+    // 打开中断
+    // 当发生时钟中断时，就会切换到其他任务
     sti();
 
     while (true)

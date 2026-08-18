@@ -7,7 +7,7 @@
 
 struct frame {
     // 通用寄存器
-    unsigned long ax, cx, dx, bx, sp, bp, si, di;
+    unsigned long di, si, bp, sp, bx, dx, cx, ax;
     // 段寄存器
     unsigned short gs, __gsh;
     unsigned short fs, __fsh;

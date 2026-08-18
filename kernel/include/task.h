@@ -32,9 +32,15 @@ struct task_struct {
     unsigned int magic;
 };
 
+typedef int (*ktask_func)(void *args);
+
+/* task.c */
 void init_task();
 void task_schedule(struct frame *frame);
-struct task_struct *task_create(char *name, int priority, uintptr_t start_ip);
+struct task_struct *task_create(char *name, int priority);
 void task_run(struct task_struct *task);
+
+/* ktask.c */
+struct task_struct *ktask_create(char *name, int priority, ktask_func func, void *arg);
 
 #endif
