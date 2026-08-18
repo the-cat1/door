@@ -8,6 +8,7 @@
 
 #include "array_size.h"
 #include "panic.h"
+#include "frame.h"
 #include "irq.h"
 
 struct exception_info {
@@ -39,7 +40,7 @@ static const struct exception_info exceptions[] = {
     {"#MC", "Machine Check"}
 };
 
-static void general_irq(struct irq_frame *frame)
+static void general_irq(struct frame *frame)
 {
     struct exception_info info = RESERVED;
 

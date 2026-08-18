@@ -10,6 +10,7 @@
 #include "asm.h"
 #include "assert.h"
 #include "boot.h"
+#include "frame.h"
 #include "printk.h"
 #include "irq.h"
 
@@ -40,7 +41,7 @@ static irq_handler irq_handlers[DESC_COUNT];
  * @param frame 栈帧
  * @note 此函数由 irq_proc.asm 调用
  */
-void int_common(struct irq_frame *frame)
+void int_common(struct frame *frame)
 {
     int irq = frame->irq;
     assert(0 <= irq && irq < DESC_COUNT);

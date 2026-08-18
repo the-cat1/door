@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "asm.h"
+#include "frame.h"
 #include "printk.h"
 #include "irq.h"
 #define __DEVICE_TIMER_C
@@ -15,7 +16,7 @@
 #define PIT_IO_COUNTER0 0x40
 #define COUNTER0_VALUE (INPUT_FREQ / TICKS_FREQ)
 
-static void time_handler(struct irq_frame *frame)
+static void time_handler(struct frame *frame)
 {
     (void)frame;
     ticks++;
