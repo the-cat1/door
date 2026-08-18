@@ -7,6 +7,7 @@
 #include "asm.h"
 #include "frame.h"
 #include "printk.h"
+#include "task.h"
 #include "irq.h"
 #define __DEVICE_TIMER_C
 #include "device/timer.h"
@@ -18,9 +19,9 @@
 
 static void time_handler(struct frame *frame)
 {
-    (void)frame;
     ticks++;
     send_eoi();
+    task_schedule(frame);
 }
 
 void init_timer()

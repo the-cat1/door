@@ -7,6 +7,10 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
+
+#define list_entry(structname, elem_name, elem) \
+    ((structname *)((uintptr_t)(elem) - offsetof(structname, elem_name)))
 
 struct list_elem {
     struct list_elem *prev;
