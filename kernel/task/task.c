@@ -103,9 +103,11 @@ void init_task()
     list_init(&task_list);
     idle_task = task_create("idle", 1);
     assert(idle_task);
+
     idle_task->frame->cs = GDT_CODE_SEG;
     idle_task->frame->ip = (unsigned long)idle_task_func;
     idle_task->frame->flags = 0x00000200;
     task_run(idle_task);
+
     printk("initialized task");
 }
