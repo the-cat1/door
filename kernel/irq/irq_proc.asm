@@ -24,19 +24,11 @@ IRQ%1:
 extern int_common
 
 do_int:
-    push gs                 ; 保存上下文
-    push fs
+    push ds                 ; 保存上下文
     push es
-    push ds
-    push ss
-    push ebp
-    push esp
-    push edi
-    push esi
-    push edx
-    push ecx
-    push ebx
-    push eax
+    push fs
+    push gs
+    pushad
     mov ax, ss              ; 设置段寄存器
     mov ds, ax
     mov es, ax
@@ -45,19 +37,11 @@ do_int:
     push esp                ; 压入栈帧地址
     call int_common         ; 调用函数
     add esp, 4              ; 弹出参数
-    pop eax                 ; 恢复上下文
-    pop ebx
-    pop ecx
-    pop edx
-    pop esi
-    pop edi
-    pop esp
-    pop ebp
-    pop ss
-    pop ds
-    pop es
-    pop fs
+    popad                   ; 恢复上下文
     pop gs
+    pop fs
+    pop es
+    pop ds
     add esp, 8              ; 跳过中断号 + errorcode
     iret
 

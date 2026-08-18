@@ -7,13 +7,12 @@
 
 struct irq_frame {
     // 通用寄存器
-    unsigned long ax, bx, cx, dx, si, di, sp, bp;
+    unsigned long ax, cx, dx, bx, sp, bp, si, di;
     // 段寄存器
-    unsigned short ss, __ssh;
-    unsigned short ds, __dsh;
-    unsigned short es, __esh;
-    unsigned short fs, __fsh;
     unsigned short gs, __gsh;
+    unsigned short fs, __fsh;
+    unsigned short es, __esh;
+    unsigned short ds, __dsh;
     // 由 irq_proc 压入的内容
     int irq;
     unsigned long errorcode;
@@ -24,7 +23,7 @@ struct irq_frame {
     // 以下的内容只有在有特权级转换时才出现
     unsigned long org_sp;
     unsigned short org_ss, __org_ssh;
-};
+} __attribute__((__packed__));
 
 // irq 处理函数
 typedef void (*irq_handler)(struct irq_frame *);
