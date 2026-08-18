@@ -10,7 +10,7 @@
 #error lib/math.h needs GNU C
 #endif
 
-#include "compiler.h"
+#include "lib/compiler.h"
 
 /**
  * @brief 返回 a 的绝对值

@@ -6,7 +6,7 @@
 
 #include <stddef.h>
 
-#include "array_size.h"
+#include "lib/array_size.h"
 #include "panic.h"
 #include "frame.h"
 #include "irq.h"
