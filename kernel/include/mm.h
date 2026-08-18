@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 void mm_page_init();
-void *mm_page_alloc_k(long count);
-void mm_page_free(void *vaddr, long count);
+void *alloc_page_k(long count);
+void free_page(void *vaddr, long count);
 
 #endif

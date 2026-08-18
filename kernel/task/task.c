@@ -44,7 +44,7 @@ static void idle_task_func()
  */
 struct task_struct *task_create(char *name, int priority)
 {
-    struct task_struct *task = mm_page_alloc_k(1);
+    struct task_struct *task = alloc_page_k(1);
     if (!task)
         return NULL;
 

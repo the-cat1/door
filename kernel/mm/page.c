@@ -257,7 +257,7 @@ void mm_page_init()
     printk("  total %lu pages, %lu MiB", total_pages, total_pages * 4096 / 1024 / 1024);
 }
 
-void *mm_page_alloc_k(long count)
+void *alloc_page_k(long count)
 {
     if (count <= 0)
         return NULL;
@@ -276,7 +276,7 @@ void *mm_page_alloc_k(long count)
     return (void *)(vpage_start * 4096);
 }
 
-void mm_page_free(void *vaddr, long count)
+void free_page(void *vaddr, long count)
 {
     long vpage = down_to_page(vaddr);
     for (long i = 0; i < count; i++)
