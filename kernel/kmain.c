@@ -9,12 +9,12 @@
 
 #include "asm.h"
 #include "boot.h"
+#include "device/console.h"
 #include "device/timer.h"
 #include "irq.h"
 #include "mm.h"
 #include "printk.h"
 #include "task.h"
-#include "video.h"
 
 void task_switch_to(struct task_struct *);
 
@@ -39,7 +39,7 @@ struct task_struct *task2;
 
 void kmain(void)
 {
-    init_video();
+    console_init();
     printk_init();
     printk("door kernel");
 
