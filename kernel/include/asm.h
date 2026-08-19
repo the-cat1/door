@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 
+#define EFLAGS_IF 0x00000200
+
 static inline void hlt()
 {
     asm("hlt");
@@ -27,6 +29,11 @@ static inline void sti()
 static inline void nop()
 {
     asm("nop");
+}
+
+static inline void pause()
+{
+    asm("pause");
 }
 
 static inline void outb(uint16_t port, uint8_t data)
@@ -58,6 +65,11 @@ static inline void write_eflags(unsigned int flags)
 {
     asm("pushl %0\n\t"
         "popf" ::"r"(flags));
+}
+
+static inline void set_if(unsigned int val)
+{
+    val ? sti() : cli();
 }
 
 #endif
