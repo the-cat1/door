@@ -31,7 +31,7 @@ struct task_struct *ktask_create(char *name, int priority, ktask_func func, void
     task->frame->es = GDT_DATA_SEG;
     task->frame->fs = GDT_DATA_SEG;
     task->frame->gs = GDT_DATA_SEG;
-    task->frame->flags = read_eflags() | 0x00000200; // IF
+    task->frame->flags = EFLAGS_IF;
     task->frame->ip = (unsigned long)ktask_start;
 
     return task;

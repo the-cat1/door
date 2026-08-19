@@ -7,12 +7,18 @@
 #include "asm.h"
 #include "spin_lock.h"
 
+void spin_lock_init(struct spin_lock *lock)
+{
+    lock->value = 0;
+    lock->eflags_if = 0;
+}
+
 void spin_lock_acquire(struct spin_lock *lock)
 {
     unsigned int eflags = read_eflags();
     cli();
 
-    while (lock->value == 0)
+    while (lock->value != 0)
         pause();
     lock->value = 1;
     lock->eflags_if = eflags & 0x200;

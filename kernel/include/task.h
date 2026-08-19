@@ -9,6 +9,7 @@
 
 #include "list.h"
 #include "frame.h"
+#include "spin_lock.h"
 
 #define TASK_STRUCT_NAME_LEN 64
 #define TASK_STRUCT_MAGIC 0x20160818
@@ -44,8 +45,10 @@ void task_run(struct task_struct *task);
 /* ktask.c */
 struct task_struct *ktask_create(char *name, int priority, ktask_func func, void *arg);
 
+/* lock.c */
 struct lock {
     int value;
+    struct spin_lock spin_lock;
     struct task_struct *holder;
     struct list wait_list;
 };

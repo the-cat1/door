@@ -10,6 +10,7 @@ struct spin_lock {
     unsigned int eflags_if;
 };
 
+void spin_lock_init(struct spin_lock *lock);
 void spin_lock_acquire(struct spin_lock *lock);
 void spin_lock_relase(struct spin_lock *lock);
 

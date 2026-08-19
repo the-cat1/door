@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "spin_lock.h"
 #include "list.h"
 
 /**
@@ -14,6 +15,7 @@
  */
 void list_init(struct list *l)
 {
+    spin_lock_init(&l->lock);
     l->head.prev = NULL;
     l->head.next = &l->tail;
     l->tail.prev = &l->head;
@@ -28,10 +30,12 @@ void list_init(struct list *l)
  */
 void list_push(struct list *l, struct list_elem *elem)
 {
+    spin_lock_acquire(&l->lock);
     elem->prev = &l->head; // 更新 elem 的 prev 和 next
     elem->next = l->head.next;
     l->head.next->prev = elem; // 更新原先第一项的 prev
     l->head.next = elem; // 更新 head 的 next
+    spin_lock_relase(&l->lock);
 }
 
 /**
@@ -42,10 +46,12 @@ void list_push(struct list *l, struct list_elem *elem)
  */
 void list_append(struct list *l, struct list_elem *elem)
 {
+    spin_lock_acquire(&l->lock);
     elem->prev = l->tail.prev;
     elem->next = &l->tail;
     l->tail.prev->next = elem;
     l->tail.prev = elem;
+    spin_lock_relase(&l->lock);
 }
 
 /**
@@ -53,15 +59,22 @@ void list_append(struct list *l, struct list_elem *elem)
  *
  * @param l 链表
  * @return 弹出的元素的指针
+ *
+ * @note 如果链表为空，返回 NULL
  */
 struct list_elem *list_pop(struct list *l)
 {
+    spin_lock_acquire(&l->lock);
     struct list_elem *ret = l->head.next; // 保存 pop 出来的 list_elem
-    if (ret->next == NULL) // 是否是 tail？
+    if (ret->next == NULL) { // 是否是 tail？
+        spin_lock_relase(&l->lock);
         return NULL;
+    }
 
     l->head.next = ret->next; // 设置 l->head
     ret->next->prev = &l->head; // 设置原来的第二项
+
+    spin_lock_relase(&l->lock);
     return ret;
 }
 
@@ -71,14 +84,17 @@ struct list_elem *list_pop(struct list *l)
  * @param elem 要删除的元素
  * @return 被删除的元素，如果 elem 无效，返回 NULL
  */
-struct list_elem *list_remove(struct list_elem *elem)
+struct list_elem *list_remove(struct list *l, struct list_elem *elem)
 {
+    spin_lock_acquire(&l->lock);
     if (elem == NULL || elem->next == NULL || elem->prev == NULL)
-        return NULL;
+        goto end;
 
     elem->prev->next = elem->next;
     elem->next->prev = elem->prev;
 
+end:
+    spin_lock_relase(&l->lock);
     return elem;
 }
 
@@ -90,7 +106,10 @@ struct list_elem *list_remove(struct list_elem *elem)
  */
 bool list_empty(struct list *l)
 {
-    return l->head.next == &l->tail && l->tail.prev == &l->head;
+    spin_lock_acquire(&l->lock);
+    bool ret = l->head.next == &l->tail && l->tail.prev == &l->head;
+    spin_lock_relase(&l->lock);
+    return ret;
 }
 
 /**
@@ -101,6 +120,7 @@ bool list_empty(struct list *l)
  */
 size_t list_len(struct list *l)
 {
+    spin_lock_acquire(&l->lock);
     size_t count = 0;
     struct list_elem *elem = l->head.next;
     while (elem->next != NULL) {
@@ -108,6 +128,7 @@ size_t list_len(struct list *l)
         count++;
     }
 
+    spin_lock_relase(&l->lock);
     return count;
 }
 
@@ -122,12 +143,16 @@ size_t list_len(struct list *l)
  */
 struct list_elem *list_traversal(struct list *l, list_traversal_func f)
 {
+    spin_lock_acquire(&l->lock);
     struct list_elem *elem = l->head.next;
     while (elem->next != NULL) {
-        if (f(elem))
+        if (f(elem)) {
+            spin_lock_relase(&l->lock);
             return elem;
+        }
         elem = elem->next;
     }
 
+    spin_lock_relase(&l->lock);
     return NULL; // no found
 }

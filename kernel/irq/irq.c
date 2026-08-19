@@ -7,11 +7,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "asm.h"
 #include "assert.h"
 #include "boot.h"
 #include "frame.h"
 #include "printk.h"
+#include "spin_lock.h"
 #include "irq.h"
 
 #define DESC_COUNT 256
@@ -33,6 +33,7 @@ extern void init_pic();
 extern void enable_pic_irq(int irq);
 
 static struct gate_desc idt[DESC_COUNT];
+static struct spin_lock irq_handlers_lock;
 static irq_handler irq_handlers[DESC_COUNT];
 
 /**
@@ -62,14 +63,13 @@ void register_irq(int irq, irq_handler handler)
     assert(0 <= irq && irq < DESC_COUNT);
     assert(!irq_handlers[irq]);
 
-    unsigned int eflags = read_eflags();
-    cli();
+    spin_lock_relase(&irq_handlers_lock);
 
     irq_handlers[irq] = handler;
     if (0x20 <= irq && irq < 0x30)
         enable_pic_irq(irq);
 
-    write_eflags(eflags);
+    spin_lock_relase(&irq_handlers_lock);
 }
 
 /**
@@ -94,6 +94,8 @@ void init_irq()
     // 加载 LDTR
     uint64_t idtr = (uint64_t)(uint32_t)idt << 16 | (sizeof(idt) - 1);
     asm("lidt %0" ::"m"(idtr));
+
+    spin_lock_init(&irq_handlers_lock);
 
     register_exceptions(); // 注册异常
     init_pic(); // 初始化 PIC

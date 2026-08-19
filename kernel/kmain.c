@@ -40,6 +40,7 @@ struct task_struct *task2;
 void kmain(void)
 {
     init_video();
+    printk_init();
     printk("door kernel");
 
     init_irq();

@@ -5,6 +5,7 @@
 #ifndef __PRINTK_H
 #define __PRINTK_H
 
+void printk_init();
 void printk(const char *format, ...);
 
 #endif /* __PRINTK_H */
