@@ -22,16 +22,20 @@ int task_1(void *arg)
 {
     while (true) {
         printk("hello from task 1! %s", arg);
+        hlt();
     }
 }
 
 int task_2(void *arg)
 {
     while (true) {
-        // hlt();
         printk("hello from task 2! %s", arg);
+        hlt();
     }
 }
+
+struct task_struct *task1;
+struct task_struct *task2;
 
 void kmain(void)
 {
@@ -44,11 +48,11 @@ void kmain(void)
     mm_page_init();
     init_task();
 
-    struct task_struct *task1 = ktask_create("LOL task", 20, task_1, "arg1");
+    task1 = ktask_create("task 1", 20, task_1, "arg1");
     printk("task %p", task1);
     task_run(task1);
 
-    struct task_struct *task2 = ktask_create("LOL task 2", 20, task_2, "arg2");
+    task2 = ktask_create("task 2", 20, task_2, "arg2");
     printk("task %p", task2);
     task_run(task2);
 

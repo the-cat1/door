@@ -35,6 +35,20 @@ void list_push(struct list *l, struct list_elem *elem)
 }
 
 /**
+ * @berif 在链表尾部添加一个元素
+ *
+ * @param l 链表
+ * @param elem 要添加的元素
+ */
+void list_append(struct list *l, struct list_elem *elem)
+{
+    elem->prev = l->tail.prev;
+    elem->next = &l->tail;
+    l->tail.prev->next = elem;
+    l->tail.prev = elem;
+}
+
+/**
  * @berif 在链表顶部弹出一个元素
  *
  * @param l 链表

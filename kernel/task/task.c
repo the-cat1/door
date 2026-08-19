@@ -55,7 +55,7 @@ struct task_struct *task_create(char *name, int priority)
     task->kstack = (void *)((uintptr_t)task + 4096);
     task->frame = (void *)((uintptr_t)task + 4096 - sizeof(struct frame));
     task->status = TASK_READY;
-    list_push(&task_list, &task->elem);
+    list_push(&task_list, &task->task_list_elem);
 
     return task;
 }
@@ -74,22 +74,22 @@ void task_schedule(struct frame *frame)
     if (cur_task) {
         cur_task->total_ticks++;
         cur_task->ticks--;
-        if (cur_task->ticks > 0)
+        if (cur_task->ticks > 0 && cur_task->status == TASK_RUNNING)
             return; // continue run current task
 
         // need task switch
-        if (cur_task->elem.next->next != NULL) // 如果没到达链表尾部，设置 next_task 为下一个
-            next_task_elem = cur_task->elem.next;
+        if (cur_task->task_list_elem.next->next != NULL) // 如果没到达链表尾部，设置 next_task 为下一个
+            next_task_elem = cur_task->task_list_elem.next;
     }
 
     // 换任务
-    struct task_struct *next_task = list_entry(struct task_struct, elem, next_task_elem);
+    struct task_struct *next_task = list_entry(struct task_struct, task_list_elem, next_task_elem);
     while (!(next_task->status == TASK_RUNNING)) {
         next_task_elem = next_task_elem->next;
         if (next_task_elem->next == NULL)
-            next_task_elem = &idle_task->elem; // 到达链表尾部，设置为 idle
+            next_task_elem = &idle_task->task_list_elem; // 到达链表尾部，设置为 idle
 
-        next_task = list_entry(struct task_struct, elem, next_task_elem);
+        next_task = list_entry(struct task_struct, task_list_elem, next_task_elem);
     }
 
     cur_task->frame = frame;

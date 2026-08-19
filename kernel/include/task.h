@@ -28,7 +28,8 @@ struct task_struct {
     int priority;
     int ticks;
     int total_ticks;
-    struct list_elem elem;
+    struct list_elem task_list_elem;
+    struct list_elem lock_list_elem;
     unsigned int magic;
 };
 
@@ -42,5 +43,15 @@ void task_run(struct task_struct *task);
 
 /* ktask.c */
 struct task_struct *ktask_create(char *name, int priority, ktask_func func, void *arg);
+
+struct lock {
+    int value;
+    struct task_struct *holder;
+    struct list wait_list;
+};
+
+void lock_init(struct lock *lock);
+void lock_acquire(struct lock *lock);
+void lock_release(struct lock *lock);
 
 #endif

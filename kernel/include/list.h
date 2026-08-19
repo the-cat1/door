@@ -9,8 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define list_entry(structname, elem_name, elem) \
-    ((structname *)((uintptr_t)(elem) - offsetof(structname, elem_name)))
+#define list_entry(structname, elem_name, elem) ((structname *)((uintptr_t)(elem) - offsetof(structname, elem_name)))
 
 struct list_elem {
     struct list_elem *prev;
@@ -27,6 +26,7 @@ typedef bool(list_traversal_func)(struct list_elem *);
 void list_init(struct list *l);
 void list_push(struct list *l, struct list_elem *elem);
 struct list_elem *list_pop(struct list *l);
+void list_append(struct list *l, struct list_elem *elem);
 struct list_elem *list_remove(struct list_elem *elem);
 size_t list_len(struct list *l);
 bool list_empty(struct list *l);
