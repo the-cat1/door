@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 // 提供一些编译器相关的宏
-// 目前只有 GNUC 支持 ;)
 
 #ifndef __COMPILER_H
 #define __COMPILER_H
@@ -13,7 +12,10 @@
 #error compiler.h needs GNU C
 #endif
 
-#define static_assert _Static_assert /* Avoid some compiler does not support static_assert without <assert.h> */
+#ifndef static_assert
+#define _static_assert(expr, msg)  _Static_assert((expr), msg)
+#define static_assert(expr) _static_assert(expr, #expr)
+#endif
 
 #define same_type(a, b) __builtin_types_compatible_p(typeof(a), typeof(b))
 #define must_same_type(a, b) static_assert(same_type((a), (b)))
