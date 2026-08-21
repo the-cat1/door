@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "asm.h"
-#include "boot.h"
+#include "gdt.h"
 #include "task.h"
 
 static void ktask_start()
@@ -26,11 +26,11 @@ struct task_struct *ktask_create(char *name, int priority, ktask_func func, void
 
     task->frame->di = (unsigned long)func;
     task->frame->si = (unsigned long)arg;
-    task->frame->cs = GDT_CODE_SEG;
-    task->frame->ds = GDT_DATA_SEG;
-    task->frame->es = GDT_DATA_SEG;
-    task->frame->fs = GDT_DATA_SEG;
-    task->frame->gs = GDT_DATA_SEG;
+    task->frame->cs = selector_kernel_code;
+    task->frame->ds = selector_kernel_data;
+    task->frame->es = selector_kernel_data;
+    task->frame->fs = selector_kernel_data;
+    task->frame->gs = selector_kernel_data;
     task->frame->flags = EFLAGS_IF;
     task->frame->ip = (unsigned long)ktask_start;
 

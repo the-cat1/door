@@ -11,6 +11,7 @@
 #include "boot.h"
 #include "device/console.h"
 #include "device/timer.h"
+#include "gdt.h"
 #include "irq.h"
 #include "mm.h"
 #include "printk.h"
@@ -43,6 +44,7 @@ void kmain(void)
     printk_init();
     printk("door kernel");
 
+    gdt_init();
     init_irq();
     init_timer();
     copy_multiboot_info();

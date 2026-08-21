@@ -8,8 +8,8 @@
 #include <stdint.h>
 
 #include "assert.h"
-#include "boot.h"
 #include "frame.h"
+#include "gdt.h"
 #include "printk.h"
 #include "spin_lock.h"
 #include "irq.h"
@@ -85,7 +85,7 @@ void init_irq()
         idt[i] = (struct gate_desc){
             .offset_low = irq_proc & 0x0000FFFF,
             .offset_high = irq_proc >> 16,
-            .seg_selector = GDT_CODE_SEG,
+            .seg_selector = selector_kernel_code,
             .attribute = DESC_ATTR_DPL0,
             .reserved = 0
         };

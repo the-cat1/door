@@ -125,9 +125,6 @@ extern char boot_loader_name[BOOT_LOADER_NAME_LEN];
 void copy_multiboot_info();
 
 /* boot/boot.asm */
-#define GDT_CODE_SEG (1 << 3)
-#define GDT_DATA_SEG (2 << 3)
-
 extern struct multiboot_info *mboot_info;
 
 /* linker.ld */
