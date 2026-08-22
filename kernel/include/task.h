@@ -57,4 +57,7 @@ void lock_init(struct lock *lock);
 void lock_acquire(struct lock *lock);
 void lock_release(struct lock *lock);
 
+/* switch.asm */
+void task_schedule_now();
+
 #endif

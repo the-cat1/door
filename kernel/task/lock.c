@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-#include "asm.h"
 #include "list.h"
 #include "spin_lock.h"
 #include "task.h"
@@ -35,7 +34,7 @@ void lock_acquire(struct lock *lock)
         list_append(&lock->wait_list, &cur_task->lock_list_elem);
         cur_task->status = TASK_SLEEPING;
         spin_lock_relase(&lock->spin_lock);
-        hlt(); // 被唤醒的话，就是有任务释放了锁
+        task_schedule_now(); // 被唤醒的话，就是有任务释放了锁
         spin_lock_acquire(&lock->spin_lock);
     }
 
