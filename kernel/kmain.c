@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "lib/string.h"
 
 #include "asm.h"
 #include "boot.h"
@@ -21,18 +22,16 @@ void task_switch_to(struct task_struct *);
 
 int task_1(void *arg)
 {
+    printk("hello from task 1! %s", arg);
     while (true) {
-        printk("hello from task 1! %s", arg);
         hlt();
     }
 }
 
-int task_2(void *arg)
+void utask_func()
 {
-    while (true) {
-        printk("hello from task 2! %s", arg);
-        hlt();
-    }
+    while (true)
+        ;
 }
 
 struct task_struct *task1;
@@ -55,8 +54,9 @@ void kmain(void)
     printk("task %p", task1);
     task_run(task1);
 
-    task2 = ktask_create("task 2", 20, task_2, "arg2");
-    printk("task %p", task2);
+    mmap_page(1000, alloc_phy_page(), PAGE_P | PAGE_U | PAGE_W);
+    memcpy((void *)(1000 * 4096), utask_func, 4096);
+    task2 = utask_create("usertask2", 20, 1000 * 4096, 1001 * 4096);
     task_run(task2);
 
     // 打开中断

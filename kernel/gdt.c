@@ -57,7 +57,7 @@ static int install_entry(uintptr_t base, uintptr_t limit, uint8_t access, uint8_
 
 static uint16_t create_entry(uintptr_t base, uintptr_t limit, uint8_t dpl, uint8_t access, uint8_t flags)
 {
-    int index = install_entry(base, limit, access | (dpl << 3), flags);
+    int index = install_entry(base, limit, access | (dpl << 5), flags);
     if (index < 0)
         panic("cannot install gdt entry.");
 
@@ -73,16 +73,18 @@ void gdt_init()
     create_entry(0, 0, 0, 0, 0);
     selector_kernel_code = create_entry(0, 0xfffff, GDT_DPL_KERNEL, AC_X | AC_RW | AC_P | AC_S, GDT_DB | GDT_G);
     selector_kernel_data = create_entry(0, 0xfffff, GDT_DPL_KERNEL, AC_RW | AC_P | AC_S, GDT_DB | GDT_G);
-    selector_user_code = create_entry(0, 0xfffff, GDT_DPL_USER, AC_X | AC_RW | AC_P, GDT_DB | GDT_G);
+    selector_user_code = create_entry(0, 0xfffff, GDT_DPL_USER, AC_X | AC_RW | AC_P | AC_S, GDT_DB | GDT_G);
     selector_user_data = create_entry(0, 0xfffff, GDT_DPL_USER, AC_RW | AC_P | AC_S, GDT_DB | GDT_G);
-    selector_tss = create_entry((uintptr_t)&tss, sizeof(tss), GDT_DPL_KERNEL, AC_P | AC_TSS, GDT_DB);
+    selector_tss = create_entry((uintptr_t)&tss, sizeof(tss), GDT_DPL_KERNEL, AC_P | AC_TSS, 0);
 
     uint64_t gdt_size = desc_count * 8 - 1;
     uint64_t gdtr_val = (uint64_t)(uintptr_t)gdt << 16 | gdt_size;
     asm("lgdt %0" ::"m"(gdtr_val));
+    asm volatile("ljmp %0, $1f\n1:" : : "i"(8));
     asm("movw %0, %%ss\n\t"
         "movw %0, %%ds\n\t"
         "movw %0, %%es\n\t"
         "movw %0, %%fs\n\t"
         "movw %0, %%gs\n\t" ::"r"(selector_kernel_data));
+    asm("ltr %0" ::"r"(selector_tss));
 }

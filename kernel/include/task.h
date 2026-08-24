@@ -39,11 +39,11 @@ typedef int (*ktask_func)(void *args);
 /* task.c */
 void init_task();
 void task_schedule(struct frame *frame);
-struct task_struct *task_create(char *name, int priority);
+struct task_struct *task_create(const char *name, int priority);
 void task_run(struct task_struct *task);
 
 /* ktask.c */
-struct task_struct *ktask_create(char *name, int priority, ktask_func func, void *arg);
+struct task_struct *ktask_create(const char *name, int priority, ktask_func func, void *arg);
 
 /* lock.c */
 struct lock {
@@ -56,6 +56,9 @@ struct lock {
 void lock_init(struct lock *lock);
 void lock_acquire(struct lock *lock);
 void lock_release(struct lock *lock);
+
+/* utask.c */
+struct task_struct *utask_create(const char *name, int priority, uintptr_t ip, uintptr_t sp);
 
 /* switch.asm */
 void task_schedule_now();

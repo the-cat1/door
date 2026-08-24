@@ -18,7 +18,7 @@ static void ktask_start()
     ((ktask_func)func)(arg);
 }
 
-struct task_struct *ktask_create(char *name, int priority, ktask_func func, void *arg)
+struct task_struct *ktask_create(const char *name, int priority, ktask_func func, void *arg)
 {
     struct task_struct *task = task_create(name, priority);
     if (!task)

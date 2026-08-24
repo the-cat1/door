@@ -14,21 +14,12 @@
 #include "bitmap.h"
 #include "boot.h"
 #include "lib/math.h"
-#include "mm.h"
 #include "panic.h"
 #include "printk.h"
+#include "task.h"
+#include "mm.h"
 
 #define SEG_COUNT 16
-
-#define PAGE_P ((uint32_t)0x001)
-#define PAGE_W ((uint32_t)0x002)
-#define PAGE_U ((uint32_t)0x004)
-#define PAGE_PWT ((uint32_t)0x008)
-#define PAGE_PCD ((uint32_t)0x010)
-#define PAGE_A ((uint32_t)0x020)
-#define PAGE_D ((uint32_t)0x040)
-#define PAGE_PAT ((uint32_t)0x080)
-#define PAGE_G ((uint32_t)0x100)
 
 #define PTES ((uint32_t *)0xffc00000)
 #define PDE ((uint32_t *)0xfffff000)
@@ -44,6 +35,7 @@ struct mm_seg {
 };
 
 static struct mm_seg segs[SEG_COUNT];
+static struct lock mm_lock;
 static long total_pages;
 
 static void set_page(long page, uint32_t value)
@@ -208,6 +200,8 @@ static long mm_page_scan_kv(long count)
 void mm_page_init()
 {
     set_kernel_pages();
+    PDE[0] |= PAGE_U;
+    lock_init(&mm_lock);
 
     int j = 0;
     for (int i = 0; i < min(mmaps_u_count, SEG_COUNT); i++) {
@@ -261,6 +255,7 @@ void *alloc_page_k(long count)
 {
     if (count <= 0)
         return NULL;
+    lock_acquire(&mm_lock);
 
     long ppages[count];
     long vpage_start = mm_page_scan_kv(count);
@@ -273,12 +268,28 @@ void *alloc_page_k(long count)
 
     for (long k = 0; k < count; k++)
         set_page_phy(vpage_start + k, ppages[k] + seg->base, PAGE_P);
+
+    lock_release(&mm_lock);
     return (void *)(vpage_start * 4096);
 }
 
 void free_page(void *vaddr, long count)
 {
+    lock_acquire(&mm_lock);
     long vpage = down_to_page(vaddr);
     for (long i = 0; i < count; i++)
         free_vpage(vpage + i);
+    lock_release(&mm_lock);
+}
+
+void mmap_page(long virtual_page, long phyical_page, uint32_t attr)
+{
+    lock_acquire(&mm_lock);
+    set_page_phy(virtual_page, phyical_page, attr);
+    lock_release(&mm_lock);
+}
+
+long alloc_phy_page()
+{
+    return bitmap_alloc(&segs[0].map) + segs[0].base;
 }

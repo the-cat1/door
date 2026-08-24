@@ -41,7 +41,7 @@ static void idle_task_func()
  * @note 如果创建失败，返回 NULL
  * @warning 创建之后，需要设置 frame 作为任务开始运行的状态
  */
-struct task_struct *task_create(char *name, int priority)
+struct task_struct *task_create(const char *name, int priority)
 {
     struct task_struct *task = alloc_page_k(1);
     if (!task)
@@ -91,6 +91,9 @@ void task_schedule(struct frame *frame)
         next_task = list_entry(struct task_struct, task_list_elem, next_task_elem);
     }
 
+    // 任务切换
+    tss.sp0 = (uintptr_t)next_task->kstack;
+    tss.ss0 = selector_kernel_data;
     cur_task->frame = frame;
     next_task->ticks = next_task->priority;
     cur_task = next_task;
