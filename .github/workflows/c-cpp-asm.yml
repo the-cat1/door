@@ -8,10 +8,26 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v4
-    - name: make
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install NASM
+      uses: step-security/setup-nasm@v1
+
+    - name: Install i686-elf-gcc (prebuilt binary example)
+      run: |
+        sudo apt-get update && sudo apt-get install -y unzip wget
+        # Thanks to https://github.com/lordmilko/i686-elf-tools/
+        wget -q https://github.com/lordmilko/i686-elf-tools/releases/download/15.2.0/i686-elf-tools-linux.zip       sudo unzip -q i686-elf-tools-linux.zip -d /opt/
+        echo "/opt/i686-elf-tools/bin" >> $GITHUB_PATH
+
+    - name: Verify installations
+      run: |
+        nasm -v
+        i686-elf-gcc --version
+
+    - name: Build
       run: make

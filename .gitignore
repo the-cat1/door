@@ -30,3 +30,4 @@ kernel/kernel
 # No ignore
 !.gitignore
 !.clang-format
+!.github
