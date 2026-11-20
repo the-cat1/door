@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Zhan Zixuan
+#
+# SPDX-License-Identifier: MIT
+
 name: C/C++ & ASM CI
 
 on:
@@ -8,10 +12,26 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: make
-      run: make
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install NASM
+        uses: step-security/setup-nasm@v1
+
+      - name: Install i686-elf-gcc (prebuilt binary)
+        run: |
+          sudo apt-get update && sudo apt-get install -y unzip wget
+          wget -q --retry-connrefused --waitretry=5 --tries=5 \
+            https://github.com/lordmilko/i686-elf-tools/releases/download/7.1.0/i686-elf-tools-linux.zip
+          sudo unzip -q i686-elf-tools-linux.zip -d /usr/local
+
+      - name: Verify installations
+        run: |
+          nasm -v
+          i686-elf-gcc --version
+
+      - name: Build
+        run: make
