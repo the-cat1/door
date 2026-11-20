@@ -3,8 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 // 管理一页（4k）的分配和释放
-// 这里大部分的算法都可以改进
-// 但是太麻烦了 T_T 懒得搞
 
 #include <stdbool.h>
 #include <stddef.h>
