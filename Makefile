@@ -4,14 +4,13 @@
 
 
 # Export root
-export ROOT_PATH 		:= $(PWD)
+export ROOT_PATH := $(PWD)
 
-
-BOCHS_SRC 			= tools/bochs/bochsrc.txt
-SUBDIR				= bootloader kernel
+BOCHS_SRC = tools/bochs/bochsrc.txt
+SUBDIR    = bootloader kernel
 
 # Output files
-FLOPPY				= floppy.img
+FLOPPY = floppy.img
 
 include Makefile.config
 
